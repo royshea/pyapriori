@@ -45,7 +45,7 @@ struct node *copy_list_of_lists(struct node *n)
 
     while(iter != NULL)
     {
-        add(&copy,copy_list((struct node *)iter->data),iter->count);
+        add(&copy,copy_list((struct node *)iter->data, sizeof(uint32_t)),iter->count);
         iter = iter->next;
     }
     return copy;

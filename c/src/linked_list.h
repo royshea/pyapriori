@@ -26,7 +26,7 @@ int get_len_list(struct node *n);
 
 struct node *get_node(struct node *n, int index);
 
-struct node *copy_list(struct node *n);
+struct node *copy_list(struct node *n, int data_size);
 
 struct node *mergesort(struct node *head,int (*cmp)(void *,void *));
 

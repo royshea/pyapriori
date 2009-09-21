@@ -11,7 +11,7 @@ int add(struct node **n, void* d, int count)
 {
     if (*n == NULL)
     {
-        if ((*n = malloc(sizeof(struct node)))==NULL)
+        if ((*n = malloc(sizeof(struct node))) == NULL)
         {
             printf("Memory allocation error");
             return 0;
@@ -22,27 +22,27 @@ int add(struct node **n, void* d, int count)
     }
     else
     {
-        struct node *temp = *n;
-        while (temp->next != NULL)
+        struct node *tmp = *n;
+        while (tmp->next != NULL)
         {
-            temp = temp->next;
+            tmp = tmp->next;
         }
 
-        if ((temp->next = malloc(sizeof(struct node)))==NULL)
+        if ((tmp->next = malloc(sizeof(struct node))) == NULL)
         {
             printf("Memory allocation error");
             return 0;
         }
-        temp->next->next = NULL;
-        temp->next->data = d;
-        temp->next->count = count;
+        tmp->next->next = NULL;
+        tmp->next->data = d;
+        tmp->next->count = count;
     }
     return 1;
 
 }
 
 
-void free_list(struct node **n,void (*free_funct)(void *))
+void free_list(struct node **n, void (*free_funct)(void *))
 {
     struct node *current;
     struct node *next;
@@ -85,23 +85,24 @@ struct node *get_node(struct node *n, int index)
 }
 
 /* TODO: This assumes that data is an integer */
-struct node *copy_list(struct node *n)
+struct node *copy_list(struct node *n, int data_size)
 {
-    uint32_t *temp = NULL;
+    void *tmp = NULL;
     struct node *iter = n;
     struct node *copy = NULL;
     while (iter != NULL)
     {
-        temp = malloc(sizeof(uint32_t));
-        *temp = *((uint32_t *)iter->data);
-        add(&copy,(void *)temp,iter->count);
+        tmp = malloc(data_size);
+        memcpy(tmp, inter->data, data_size);
+        add(&copy,(void *)tmp, iter->count);
         iter = iter->next;
     }
     return copy;
 }
 
 /* merge the lists.. */
-struct node *merge(struct node *head_one, struct node *head_two,int (*cmp)(void *,void *))
+struct node *merge(struct node *head_one, struct node *head_two,
+        int (*cmp)(void *, void *))
 {
     struct node *head_three;
 
@@ -113,23 +114,22 @@ struct node *merge(struct node *head_one, struct node *head_two,int (*cmp)(void 
     if (head_two == NULL)
         return head_one;
 
-    int compare = (*cmp)(head_one->data,head_two->data);
-    if (compare < 0)
+    if ((*cmp)(head_one->data, head_two->data) < 0)
     {
         head_three = head_one;
-        head_three->next = merge(head_one->next, head_two,cmp);
+        head_three->next = merge(head_one->next, head_two, cmp);
     }
     else
     {
         head_three = head_two;
-        head_three->next = merge(head_one, head_two->next,cmp);
+        head_three->next = merge(head_one, head_two->next, cmp);
     }
 
     return head_three;
 }
 
 
-struct node *mergesort(struct node *head,int (*cmp)(void *,void *))
+struct node *mergesort(struct node *head, int (*cmp)(void *, void *))
 {
     struct node *head_one;
     struct node *head_two;
@@ -147,23 +147,23 @@ struct node *mergesort(struct node *head,int (*cmp)(void *,void *))
     head_two = head->next;
     head->next = NULL;
 
-    return merge(mergesort(head_one,cmp), mergesort(head_two,cmp),cmp);
+    return merge(mergesort(head_one, cmp), mergesort(head_two, cmp), cmp);
 }
 
 
 /* TODO / BUG: This assumes that data is sorted. */
-int is_subset(struct node *l_1, struct node *l_2, int (*cmp)(void *,void *))
+int is_subset(struct node *l_1, struct node *l_2, int (*cmp)(void *, void *))
     /* Returns if l_2 is a subset of l_1 */
 {
+    unsigned char inside;
+    struct node *iter_1;
+    struct node *iter_2 = l_2;
+
     if (l_1 == NULL || l_2 == NULL)
         return FALSE;
 
     if (get_len_list(l_1) < get_len_list(l_2))
         return FALSE;
-
-    unsigned char inside;
-    struct node *iter_1;
-    struct node *iter_2 = l_2;
 
     while (iter_2 != NULL)
     {
@@ -171,7 +171,7 @@ int is_subset(struct node *l_1, struct node *l_2, int (*cmp)(void *,void *))
         inside = FALSE;
         while (iter_1 != NULL)
         {
-            if ((*cmp)(head_one->data,head_two->data) == 0)
+            if ((*cmp)(iter_1->data, iter_2->data) == 0)
                 inside = TRUE;
             iter_1 = iter_1->next;
         }

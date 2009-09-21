@@ -154,7 +154,7 @@ struct node *generate(struct node **f_item_list,double minsup,
 
         while(iter != NULL)
         {
-            copy = copy_list((struct node *)iter->data);
+            copy = copy_list((struct node *)iter->data, sizeof(uint32_t));
             add(&checked_sets,copy,0);
             inside = FALSE;
 
@@ -187,7 +187,8 @@ struct node *generate(struct node **f_item_list,double minsup,
     item_list = cand_trans_list;
     while(item_list != NULL)
     {
-        add_trans(&ht,copy_list((struct node *)item_list->data));
+        add_trans(&ht,copy_list((struct node *)item_list->data,
+                    sizeof(uint32_t)));
         item_list = item_list->next;
     }
 
@@ -261,7 +262,7 @@ struct node *check_item_last(struct node *trans_1, struct node *trans_2)
         uint32_t *temp = malloc(sizeof(uint32_t));
         *temp = *((uint32_t *)iter_2->data);
         iter_1 = NULL;
-        iter_1 = copy_list(trans_1);
+        iter_1 = copy_list(trans_1, sizeof(uint32_t));
         add(&iter_1,(void *)temp,0);
         return iter_1;
     }

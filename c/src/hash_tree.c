@@ -358,7 +358,7 @@ void check_minsup(struct hash_tree *ht, struct hash_tree_node *ht_node,double mi
             {
                 if(iter->count  >= minsup)
                 {
-                    copy = copy_list(iter->data);
+                    copy = copy_list(iter->data, sizeof(uint32_t));
                     add(&ht->l_k_set,copy,iter->count);
                 }
                 iter = iter->next;
