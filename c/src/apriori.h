@@ -48,8 +48,6 @@ int check_inside(int value, struct node *list);
 
 struct node* get_dynamic_windows(struct node* token_list,int max_d_size);
 
-int compare_ints(void* first, void* second);
-
 int compare_lists(void* first, void* second);
 
 

@@ -13,6 +13,12 @@ extern void _test_free(void* const ptr, const char* file, const int line);
 #endif
 
 
+static int compare_ints(void* first, void* second)
+{
+    return *first - *second;
+}
+
+
 struct node* apriori(double minsup, int w_size,
         char *i_file, char *o_file, int d_window_size, unsigned char node_threshold)
 {
@@ -148,8 +154,6 @@ struct node *generate(struct node **f_item_list,double minsup,
 
         while(iter != NULL)
         {
-            //			if(!is_inside(checked_sets,(struct node *)iter->data))
-            //			{
             copy = copy_list((struct node *)iter->data);
             add(&checked_sets,copy,0);
             inside = FALSE;
@@ -171,7 +175,6 @@ struct node *generate(struct node **f_item_list,double minsup,
                 remove_list(&cand_trans_list,(struct node *)item_list->data);
                 break;
             }
-            //			}
             iter = iter->next;
 
         }
@@ -364,7 +367,7 @@ struct node* one_item_sets(struct node* T, double *minsup)
         }
     }
 
-    free_list(&all_trans_list,&free_ints);
+    free_list(&all_trans_list,&free);
     return item_list;
 }
 
@@ -421,7 +424,7 @@ struct node* parser(char* file_name,int w_size, int max_d_size)
     printf("%i\n",max_window_size);
 
     /*cleanup */
-    free_list(&token_list,&free_ints);
+    free_list(&token_list,&free);
     fclose(fp);
 
     return list_of_parses;

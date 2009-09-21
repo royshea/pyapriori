@@ -13,6 +13,12 @@ extern void _test_free(void* const ptr, const char* file, const int line);
 #define free(ptr) _test_free(ptr, __FILE__, __LINE__)
 #endif
 
+static int compare_ints(void* first, void* second)
+{
+    return *first - *second;
+}
+
+
 /****************************************************************************/
 /*							Hash Tree Node 									*/
 /****************************************************************************/
@@ -68,7 +74,7 @@ int expand_node(struct hash_tree_node *ht_node, int threshold)
     }
     while(iter != NULL)
     {
-        data = get_data((struct node *)iter->data,ht_node->depth);
+        data = get_node((struct node *)iter->data,ht_node->depth)->data;
         if(data != NULL)
         {
             key = *((uint32_t *)data);
@@ -176,7 +182,7 @@ void add_trans_recursive(struct hash_tree *ht,struct hash_tree_node *ht_node,
     void *data;
     if(ht_node->node_type == interior)
     {
-        data = get_data(trans,depth);
+        data = get_node(trans,depth)->data;
         if(data != NULL)
         {
             num = *((uint32_t *)data);
@@ -282,7 +288,7 @@ void subset_recursive(struct hash_tree *ht, struct hash_tree_node *ht_node,
             while(iter != NULL)
             {
 
-                if(is_subset(trans,(struct node *)iter->data))
+                if(is_subset(trans,(struct node *)iter->data,compare_ints))
                 {
 
                     iter->count += 1;
@@ -300,7 +306,7 @@ void subset_recursive(struct hash_tree *ht, struct hash_tree_node *ht_node,
             struct node *iter = ht_node->item_lists;
             while(iter != NULL)
             {
-                if(is_subset(trans,(struct node *)iter->data))
+                if(is_subset(trans,(struct node *)iter->data, compare_ints))
                 {
                     iter->count += 1;
                 }
