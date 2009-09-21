@@ -3,18 +3,18 @@
 
 #ifndef TRUE
 #define TRUE 1
-#endif 
+#endif
 
 #ifndef FALSE
 #define FALSE 0
 #endif
 
 
-struct node 
+struct node
 {
-	void* data;
-	int count;
-	struct node* next;
+    void* data;
+    int count;
+    struct node* next;
 };
 
 

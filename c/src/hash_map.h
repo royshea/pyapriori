@@ -14,17 +14,17 @@
 
 struct hash_map
 {
-	/* array of pointer to nodes (linked lists) */ 
-	struct node **hash_table;
-	
-	/* number of buckets */ 
-	int size;
-	
-	/* number of used buckets */  
-	int count;	
-	
-	/* number of used buckets/number of buckets */ 
-	double density;
+    /* array of pointer to nodes (linked lists) */
+    struct node **hash_table;
+
+    /* number of buckets */
+    int size;
+
+    /* number of used buckets */
+    int count;
+
+    /* number of used buckets/number of buckets */
+    double density;
 };
 
 void initialize_hash_map(struct hash_map **hm);
