@@ -13,12 +13,11 @@
 struct node
 {
     void* data;
-    int count;
     struct node* next;
 };
 
 
-int add(struct node **n, void* d, int count);
+int add(struct node **n, void* d);
 
 void free_list(struct node **n,void (*free_funct)(void *));
 

@@ -1,28 +1,24 @@
-#include <malloc.h>
-#include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
-#include <assert.h>
 #include "linked_list.h"
 
 
-int add(struct node **n, void* d, int count)
+int add(struct node **head, void* d)
 {
-    if (*n == NULL)
+    if (*head == NULL)
     {
-        if ((*n = malloc(sizeof(struct node))) == NULL)
+        if ((*head = malloc(sizeof(struct node))) == NULL)
         {
             printf("Memory allocation error");
             return 0;
         }
-        (*n)->next = NULL;
-        (*n)->count = count;
-        (*n)->data = d;
+        (*head)->next = NULL;
+        (*head)->data = d;
     }
     else
     {
-        struct node *tmp = *n;
+        struct node *tmp = *head;
         while (tmp->next != NULL)
         {
             tmp = tmp->next;
@@ -35,7 +31,6 @@ int add(struct node **n, void* d, int count)
         }
         tmp->next->next = NULL;
         tmp->next->data = d;
-        tmp->next->count = count;
     }
     return 1;
 
@@ -92,9 +87,13 @@ struct node *copy_list(struct node *n, int data_size)
     struct node *copy = NULL;
     while (iter != NULL)
     {
-        tmp = malloc(data_size);
-        memcpy(tmp, inter->data, data_size);
-        add(&copy,(void *)tmp, iter->count);
+        if ((tmp = malloc(data_size)) == NULL)
+        {
+            printf("Memory allocation error");
+            return 0;
+        }
+        memcpy(tmp, iter->data, data_size);
+        add(&copy,(void *)tmp);
         iter = iter->next;
     }
     return copy;
