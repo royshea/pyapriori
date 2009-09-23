@@ -64,9 +64,7 @@ uint16_t ll_length(Node *head)
 
     count = 0;
     for (; head != NULL; head = head->next)
-    {
         count += 1;
-    }
 
     return count;
 }
@@ -74,21 +72,27 @@ uint16_t ll_length(Node *head)
 void* ll_copy(Node *head, void*(*deep_copy)(void*))
 {
     void *data_copy;
-    Node *rev_list_copy;
     Node *list_copy;
+    Node *tail;
 
-    rev_list_copy = NULL;
     list_copy = NULL;
 
+    /* Copy data into a new list.  Push each data item into the tail of
+     * the list using a tail pointer. */
     for (; head != NULL; head = head->next)
     {
         data_copy = deep_copy(head->data);
-        ll_push(&rev_list_copy, data_copy);
-    }
-
-    while (rev_list_copy != NULL)
-    {
-        ll_push(&list_copy, ll_pop(&rev_list_copy));
+        if (list_copy == NULL)
+        {
+            /* Special case for first item put into the list_copy. */
+            ll_push(&list_copy, data_copy);
+            tail = list_copy;
+        }
+        else
+        {
+            ll_push(&tail->next, data_copy);
+            tail = tail->next;
+        }
     }
 
     return list_copy;
@@ -107,108 +111,107 @@ void ll_free(Node **head, void(*free_data)(void*))
 }
 
 
-/* Sort a linked list using the comparison function defined by cmp. */
-void ll_sort(Node **head, int16_t(*compare)(void*, void*));
+static Node* ll_merge_sorted(Node **head_a, Node **head_b,
+        int16_t(*compare)(void*, void*))
+{
+    Node merged;
+    Node *tail;
 
-/* TODO */
-uint16_t ll_is_subset(Node head_a, Node head_b, uint16_t(*compare)(void *,void *));
+    /* Dummy node used to jump start the list that we merge onto. */
+    merged.next = NULL;
+    tail = &merged;
+
+    /* Walk through head_a and head_b constructing a new list. */
+    while (TRUE)
+    {
+        /* Special cases for empty a or b lists. */
+        if (*head_a == NULL)
+        {
+            tail->next = *head_b;
+            *head_b = NULL;
+            break;
+        }
+        else if (*head_b == NULL)
+        {
+            tail->next = *head_a;
+            *head_a = NULL;
+            break;
+        }
+
+        /* Push the smaller of the two onto the tail of the constructed
+         * list.  Note that this requires careful maintenance of the
+         * tail pointer. */
+        if (compare((*head_a)->data, (*head_b)->data) <= 0)
+            ll_push(&tail->next, ll_pop(head_a));
+        else
+            ll_push(&tail->next, ll_pop(head_b));
+        tail = tail->next;
+    }
+
+    return merged.next;
+}
+
+
+void ll_sort(Node **head, int16_t(*compare)(void*, void*))
+{
+
+    Node *split_a;
+    Node *split_b;
+
+   /* Base case for merge sort where the list is one or zero elements
+    * long.  Simply return the list. */
+   if (*head == NULL || (*head)->next == NULL)
+       return;
+
+   /* Split into two lists. */
+   split_a = NULL;
+   split_b = NULL;
+   while (*head != NULL)
+   {
+       ll_push(&split_a, ll_pop(head));
+       if(*head != NULL)
+           ll_push(&split_b, ll_pop(head));
+   }
+
+   /* Sort each of the split lists. */
+   ll_sort(&split_a, compare);
+   ll_sort(&split_b, compare);
+
+   /* Merge sorted lists back together. */
+   *head = ll_merge_sorted(&split_a, &split_b, compare);
+}
+
+
+uint8_t ll_is_subset_of(Node *subset, Node *head,
+        int16_t(*compare)(void *,void *))
+{
+    Node *subset_index;
+    Node *head_index;
+    uint8_t found;
+
+    /* Verify that each element of subset is somewhere within head. */
+    for (subset_index = subset; subset_index != NULL; subset_index =
+            subset_index->next)
+    {
+        found = FALSE;
+        for (head_index = head; found == FALSE && head_index != NULL;
+                head_index = head_index->next)
+        {
+            if (compare(subset_index->data, head_index->data) == 0)
+                found = TRUE;
+        }
+
+        /* Return immediately with FALSE if an element was not found. */
+        if (found == FALSE)
+            return FALSE;
+    }
+    return TRUE;
+}
 
 
 #if 0
-static struct ll_list* ll_merge(struct ll_list* ll_1, struct ll_list* ll_2,
-        int (*cmp)(void *, void *))
-{
-    struct ll_list *merged;
-
-    ll_init(merged, ll_1->data_size);
-    while (ll_1->head != NULL || ll_2->head != NULL)
-    {
-
-        if (ll_1->head == NULL)
-            ll_add(merged, ll_pop(ll_2));
-
-        else if (ll_2->head == NULL)
-            ll_add(merged, ll_pop(ll_1));
-
-        else
-        {
-            if ((*cmp)(ll_1->head->data, ll_2->head->data) < 0)
-                ll_add(merged, ll_pop(ll_2));
-
-            else
-                ll_add(merged, ll_pop(ll_1));
-        }
-    }
-
-    ll_free(ll_1);
-    ll_free(ll_2);
-
-    return merged;
-}
-
-
-struct ll_list* ll_sort(struct ll_list* ll, int (*cmp)(void *, void *))
-{
-    struct ll_list* split_list_a;
-    struct ll_list* split_list_b;
-    uint16_t index;
-
-    /* Short cuts for diginerate cases. */
-    if (ll->head == NULL || ll->head->next == NULL)
-        return ll;
-
-    /* Split the list into two halfs. */
-    split_list_a = ll_init(ll->data_size);
-    split_list_b = ll_init(ll->data_size);
-    index = 0;
-    while (ll->head != NULL)
-    {
-        if (index % 2 == 0)
-            ll_append(split_list_a, ll_pop(ll));
-        else
-            ll_append(split_list_b, ll_pop(ll));
-    }
-
-    merged_list = ll_merge(ll_sort(ll, cmp), ll_sort(split_list, cmp), cmp);
-
-    return
-}
-
-
-/* TODO / BUG: This assumes that data is sorted. */
-int is_subset(struct ll_node *l_1, struct ll_node *l_2, int (*cmp)(void *, void *))
-    /* Returns if l_2 is a subset of l_1 */
-{
-    unsigned char inside;
-    struct ll_node *iter_1;
-    struct ll_node *iter_2 = l_2;
-
-    if (l_1 == NULL || l_2 == NULL)
-        return FALSE;
-
-    if (ll_length(l_1) < ll_length(l_2))
-        return FALSE;
-
-    while (iter_2 != NULL)
-    {
-        iter_1 = l_1;
-        inside = FALSE;
-        while (iter_1 != NULL)
-        {
-            if ((*cmp)(iter_1->data, iter_2->data) == 0)
-                inside = TRUE;
-            iter_1 = iter_1->next;
-        }
-        if (inside == FALSE)
-            return FALSE;
-        iter_2 = iter_2->next;
-    }
-
-    return TRUE;
-}
-#endif
-
-/*
+/* TODO: Not implementing this function until I understand how it is
+ * used within the hash tree. */
 struct ll_node *get_node(struct ll_node *n, int index)
 {
     int count = 0;
@@ -224,4 +227,4 @@ struct ll_node *get_node(struct ll_node *n, int index)
 
     return NULL;
 }
-*/
+#endif

@@ -12,12 +12,12 @@
 #endif
 
 
+/* Basic data structure for a node. */
 typedef struct _ll_node
 {
     void* data;
     struct _ll_node* next;
 } Node;
-
 
 /* Add element data to the head of the linked list. */
 void ll_push(Node **head, void *data);
@@ -31,18 +31,15 @@ uint16_t ll_length(Node *head);
 /* Create a (deep) copy of the linked list. */
 void* ll_copy(Node *head, void*(*deep_copy)(void*));
 
-/* Free the linke list. */
+/* Free the linked list. */
 void ll_free(Node **head, void(*free_data)(void*));
 
-/* Sort a linked list using the comparison function defined by cmp. */
+/* Sort a linked list using the comparison function defined by compare. */
 void ll_sort(Node **head, int16_t(*compare)(void*, void*));
 
-/* TODO */
-uint16_t ll_is_subset(Node head_a, Node head_b, uint16_t(*compare)(void *,void *));
-
-/* Functions that are used in apriori, but I'm not sure why... */
-/*
-struct ll_node *get_node(struct ll_node *n, int index);
-*/
+/* Return TRUE (1) if the list subset is a subset (order independent)
+ * within head. */
+uint8_t ll_is_subset_of(Node *subset, Node *head,
+        int16_t(*compare)(void *,void *));
 
 #endif /*LINKED_LIST_*/

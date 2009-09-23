@@ -34,6 +34,7 @@ void free_int(void* int_data)
     return;
 }
 
+
 void* copy_int(void* int_data)
 {
     int *data;
@@ -41,6 +42,13 @@ void* copy_int(void* int_data)
     *data = *(int *)int_data;
     return data;
 }
+
+
+int16_t compare_int(void* int_a, void* int_b)
+{
+    return *(int16_t*)int_a - *(int16_t*)int_b;
+}
+
 
 /* Linked list testing. */
 
@@ -51,7 +59,7 @@ void test_ll_free(void **state)
     head = NULL;
 
     ll_free(&head, free_int);
-    assert(head == NULL);
+    assert_true(head == NULL);
 
     for (i=0; i<LIMIT; i++)
     {
@@ -62,7 +70,7 @@ void test_ll_free(void **state)
     }
 
     ll_free(&head, free_int);
-    assert(head == NULL);
+    assert_true(head == NULL);
 }
 
 
@@ -107,8 +115,8 @@ void test_ll_push(void **state)
         data = malloc(sizeof(int));
         *data = i;
         ll_push(&head, data);
-        assert(head != NULL);
-        assert(head->data == data);
+        assert_true(head != NULL);
+        assert_true(head->data == data);
     }
 
     ll_free(&head, free_int);
@@ -175,13 +183,155 @@ void test_ll_copy(void **state)
 
 void test_ll_sort(void **state)
 {
-    assert(FALSE);
+    Node *head;
+    int *data;
+
+    int* old;
+    int* new;
+
+    head = NULL;
+
+    ll_sort(&head, compare_int);
+    assert_true(head == NULL);
+
+    /* In order list */
+    data = malloc(sizeof(int));
+    *data = 0;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 1;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 2;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 3;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 4;
+    ll_push(&head, data);
+    ll_sort(&head, compare_int);
+    old = ll_pop(&head);
+    while(head != NULL)
+    {
+        new = ll_pop(&head);
+        assert_true(*new >= *old);
+        free(old);
+        old = new;
+    }
+    free(old);
+
+    /* Revese order list */
+    data = malloc(sizeof(int));
+    *data = 4;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 3;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 2;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 1;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 0;
+    ll_push(&head, data);
+    ll_sort(&head, compare_int);
+    old = ll_pop(&head);
+    while(head != NULL)
+    {
+        new = ll_pop(&head);
+        assert_true(*new >= *old);
+        free(old);
+        old = new;
+    }
+    free(old);
+
+    /* Mixed order list */
+    data = malloc(sizeof(int));
+    *data = 3;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 4;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 1;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 2;
+    ll_push(&head, data);
+    data = malloc(sizeof(int));
+    *data = 0;
+    ll_push(&head, data);
+    ll_sort(&head, compare_int);
+    old = ll_pop(&head);
+    while(head != NULL)
+    {
+        new = ll_pop(&head);
+        assert_true(*new >= *old);
+        free(old);
+        old = new;
+    }
+    free(old);
 }
 
 
 void test_ll_is_subset_of(void **state)
 {
-    assert(FALSE);
+    int i;
+    int *data;
+    Node *head;
+    Node *subset;
+
+    head = NULL;
+    for (i=0; i<5; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push(&head, data);
+    }
+
+    subset = NULL;
+    assert_true(ll_is_subset_of(subset, head, compare_int));
+
+    data = malloc(sizeof(int));
+    *data = 4;
+    ll_push(&subset, data);
+    assert_true(ll_is_subset_of(subset, head, compare_int));
+
+    data = malloc(sizeof(int));
+    *data = 2;
+    ll_push(&subset, data);
+    assert_true(ll_is_subset_of(subset, head, compare_int));
+
+    data = malloc(sizeof(int));
+    *data = 6;
+    ll_push(&subset, data);
+    assert_false(ll_is_subset_of(subset, head, compare_int));
+
+    data = malloc(sizeof(int));
+    *data = 0;
+    ll_push(&subset, data);
+    assert_false(ll_is_subset_of(subset, head, compare_int));
+
+    data = ll_pop(&subset);
+    free(data);
+    data = ll_pop(&subset);
+    free(data);
+
+    data = malloc(sizeof(int));
+    *data = 0;
+    ll_push(&subset, data);
+    assert_true(ll_is_subset_of(subset, head, compare_int));
+
+    data = malloc(sizeof(int));
+    *data = 4;
+    ll_push(&subset, data);
+    assert_true(ll_is_subset_of(subset, head, compare_int));
+
+    ll_free(&subset, free_int);
+    ll_free(&head, free_int);
 }
 
 
@@ -192,10 +342,8 @@ int main(int argc, char* argv[]) {
         unit_test(test_ll_push),
         unit_test(test_ll_length),
         unit_test(test_ll_copy),
-        /*
         unit_test(test_ll_sort),
         unit_test(test_ll_is_subset_of),
-        */
     };
     return run_tests(tests);
 }
