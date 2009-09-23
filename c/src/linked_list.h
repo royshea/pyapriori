@@ -12,42 +12,33 @@
 #endif
 
 
-struct ll_list
-{
-    struct ll_node* head;
-    struct ll_node* tail;
-    uint8_t data_size;
-};
-
-struct ll_node
+typedef struct _ll_node
 {
     void* data;
-    struct ll_node* next;
-};
+    struct _ll_node* next;
+} Node;
 
-/* Create a new linked list that stores data of size data_size. */
-struct ll_list* ll_init(size_t data_size);
 
-/* Add element data to the linked list ll. */
-void ll_append(struct ll_list *ll, void* data);
+/* Add element data to the head of the linked list. */
+void ll_push(Node **head, void *data);
 
 /* Pop an element from the head of the linked list. */
-void* ll_pop(struct ll_list *ll);
-
-/* Free the linke list. */
-void ll_free(struct ll_list *ll);
+void* ll_pop(Node **head);
 
 /* Count the number of nodes in a linked list. */
-int ll_length(struct ll_list *ll);
+uint16_t ll_length(Node *head);
 
-/* Create a copy of the linked list. */
-struct ll_list* ll_copy(struct ll_list* ll);
+/* Create a (deep) copy of the linked list. */
+void* ll_copy(Node *head, void*(*deep_copy)(void*));
 
-struct ll_node *mergesort(struct ll_node *head,int (*cmp)(void *,void *));
+/* Free the linke list. */
+void ll_free(Node **head, void(*free_data)(void*));
 
-struct ll_node *merge(struct ll_node *head_one, struct ll_node *head_two,int (*cmp)(void *,void *));
+/* Sort a linked list using the comparison function defined by cmp. */
+void ll_sort(Node **head, int16_t(*compare)(void*, void*));
 
-int is_subset(struct ll_node *l_1, struct ll_node *l_2, int (*cmp)(void *,void *));
+/* TODO */
+uint16_t ll_is_subset(Node head_a, Node head_b, uint16_t(*compare)(void *,void *));
 
 /* Functions that are used in apriori, but I'm not sure why... */
 /*

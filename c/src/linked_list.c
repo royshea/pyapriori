@@ -30,184 +30,148 @@ extern void _test_free(void* const ptr, const char* file, const int
 #endif /* UNIT_TESTING */
 
 
-struct ll_list* ll_init(size_t data_size)
+void ll_push(Node **head, void *data)
 {
-    struct ll_list *ll;
+    Node *new_head;
+    new_head = malloc(sizeof(Node));
+    assert(new_head != NULL);
 
-    /* Create an empty linked list that knows the size of data it
-     * stores. */
-    ll = malloc(sizeof(struct ll_list));
-    assert(ll != NULL);
-    ll->head = NULL;
-    ll->tail = NULL;
-    ll->data_size = data_size;
-
-    return ll;
+    new_head->data = data;
+    new_head->next = *head;
+    *head = new_head;
 }
 
 
-void ll_append(struct ll_list *ll, void* data)
+void* ll_pop(Node **head)
 {
-    struct ll_node* new_tail;
+    void *data;
+    Node *old_head;
 
-    assert(ll != NULL);
-    assert((ll->head != NULL && ll->tail != NULL) ||
-            (ll->head == NULL && ll->tail == NULL));
+    assert(*head != NULL);
 
-    /* Create new list node. */
-    new_tail = malloc(sizeof(struct ll_node));
-    assert(new_tail != NULL);
+    old_head = *head;
+    *head = (*head)->next;
 
-    new_tail->data = malloc(ll->data_size);
-    assert(new_tail->data != NULL);
-
-    memcpy(new_tail->data, data, ll->data_size);
-    new_tail->next = NULL;
-
-    if (ll->head == NULL && ll->tail == NULL)
-    {
-        /* If this is the first node in the list then the head needs to
-         * be updated to also point to this node. */
-        ll->head = new_tail;
-        ll->tail = new_tail;
-    }
-    else
-    {
-        /* Else append the node to the linked list. */
-        ll->tail->next = new_tail;
-        ll->tail = new_tail;
-    }
-
-    return;
-}
-
-
-void* ll_pop(struct ll_list *ll)
-{
-    void* tmp_data;
-    struct ll_node* old_head;
-
-    assert(ll != NULL);
-    assert(ll->head != NULL);
-
-    /* Update the head of the list. */
-    old_head = ll->head;
-    ll->head = ll->head->next;
-
-    /* Grab data from old head and release the node. */
-    tmp_data = old_head->data;
+    data = old_head->data;
     free(old_head);
 
-    return tmp_data;
+    return data;
+}
+
+uint16_t ll_length(Node *head)
+{
+    uint16_t count;
+
+    count = 0;
+    for (; head != NULL; head = head->next)
+    {
+        count += 1;
+    }
+
+    return count;
+}
+
+void* ll_copy(Node *head, void*(*deep_copy)(void*))
+{
+    void *data_copy;
+    Node *rev_list_copy;
+    Node *list_copy;
+
+    rev_list_copy = NULL;
+    list_copy = NULL;
+
+    for (; head != NULL; head = head->next)
+    {
+        data_copy = deep_copy(head->data);
+        ll_push(&rev_list_copy, data_copy);
+    }
+
+    while (rev_list_copy != NULL)
+    {
+        ll_push(&list_copy, ll_pop(&rev_list_copy));
+    }
+
+    return list_copy;
 }
 
 
-void ll_free(struct ll_list* ll)
+void ll_free(Node **head, void(*free_data)(void*))
 {
+    if (*head == NULL)
+        return;
 
-    struct ll_node *tmp_node;
-
-    assert(ll != NULL);
-
-    /* Traverse the list freeing nodes and data. */
-    while (ll->head != NULL)
-    {
-        tmp_node = ll->head;
-        ll->head = ll->head->next;
-        free(tmp_node->data);
-        free(tmp_node);
-    }
-
-    /* Free the linked list container. */
-    free(ll);
+    while (*head != NULL)
+        free_data(ll_pop(head));
 
     return;
 }
 
 
-int ll_length(struct ll_list* ll)
-{
-    uint16_t length = 0;
-    struct ll_node *tmp_node;
+/* Sort a linked list using the comparison function defined by cmp. */
+void ll_sort(Node **head, int16_t(*compare)(void*, void*));
 
-    assert(ll != NULL);
-
-    /* Iterate through and count nodes. */
-    for (tmp_node = ll->head; tmp_node != NULL; tmp_node = tmp_node->next)
-    {
-        length += 1;
-    }
-    return length;
-}
-
-
-struct ll_list* ll_copy(struct ll_list* ll)
-{
-    struct ll_list *copy;
-    struct ll_node *tmp_node;
-
-    /* Create new container for the copied list. */
-    copy = ll_init(ll->data_size);
-
-    /* Iterate through list making copies of nodes. */
-    tmp_node = ll->head;
-    for (tmp_node = ll->head; tmp_node != NULL; tmp_node = tmp_node->next)
-    {
-        ll_append(copy, tmp_node->data);
-    }
-
-    return copy;
-}
+/* TODO */
+uint16_t ll_is_subset(Node head_a, Node head_b, uint16_t(*compare)(void *,void *));
 
 
 #if 0
-/* merge the lists.. */
-static struct ll_list *ll_merge(struct ll_list* ll_1, struct ll_list*
-        ll_2, int (*cmp)(void *, void *))
+static struct ll_list* ll_merge(struct ll_list* ll_1, struct ll_list* ll_2,
+        int (*cmp)(void *, void *))
 {
     struct ll_list *merged;
 
-    /* TODO: Convert recursion into a loop. */
-    if (head_one == NULL)
-        return head_two;
-
-    if (head_two == NULL)
-        return head_one;
-
-    if ((*cmp)(head_one->data, head_two->data) < 0)
+    ll_init(merged, ll_1->data_size);
+    while (ll_1->head != NULL || ll_2->head != NULL)
     {
-        head_three = head_one;
-        head_three->next = merge(head_one->next, head_two, cmp);
-    }
-    else
-    {
-        head_three = head_two;
-        head_three->next = merge(head_one, head_two->next, cmp);
+
+        if (ll_1->head == NULL)
+            ll_add(merged, ll_pop(ll_2));
+
+        else if (ll_2->head == NULL)
+            ll_add(merged, ll_pop(ll_1));
+
+        else
+        {
+            if ((*cmp)(ll_1->head->data, ll_2->head->data) < 0)
+                ll_add(merged, ll_pop(ll_2));
+
+            else
+                ll_add(merged, ll_pop(ll_1));
+        }
     }
 
-    return head_three;
+    ll_free(ll_1);
+    ll_free(ll_2);
+
+    return merged;
 }
 
 
-struct ll_node *mergesort(struct ll_node *head, int (*cmp)(void *, void *))
+struct ll_list* ll_sort(struct ll_list* ll, int (*cmp)(void *, void *))
 {
-    struct ll_node *head_one;
-    struct ll_node *head_two;
+    struct ll_list* split_list_a;
+    struct ll_list* split_list_b;
+    uint16_t index;
 
-    if ((head == NULL) || (head->next == NULL))
-        return head;
+    /* Short cuts for diginerate cases. */
+    if (ll->head == NULL || ll->head->next == NULL)
+        return ll;
 
-    head_one = head;
-    head_two = head->next;
-    while ((head_two != NULL) && (head_two->next != NULL))
+    /* Split the list into two halfs. */
+    split_list_a = ll_init(ll->data_size);
+    split_list_b = ll_init(ll->data_size);
+    index = 0;
+    while (ll->head != NULL)
     {
-        head = head->next;
-        head_two = head->next->next;
+        if (index % 2 == 0)
+            ll_append(split_list_a, ll_pop(ll));
+        else
+            ll_append(split_list_b, ll_pop(ll));
     }
-    head_two = head->next;
-    head->next = NULL;
 
-    return merge(mergesort(head_one, cmp), mergesort(head_two, cmp), cmp);
+    merged_list = ll_merge(ll_sort(ll, cmp), ll_sort(split_list, cmp), cmp);
+
+    return
 }
 
 

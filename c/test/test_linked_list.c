@@ -19,150 +19,183 @@ extern void _test_free(void* const ptr, const char* file, const int
 #define calloc(num, size) _test_calloc(num, size, __FILE__, __LINE__)
 #define free(ptr) _test_free(ptr, __FILE__, __LINE__)
 
-/* Linked list testing. */
+/* Redefine assert for use with cmockery when unit testing. */
 
-void test_ll_init(void **state)
+#define assert(expression) \
+        mock_assert((int)(expression), #expression, __FILE__, __LINE__);
+
+#define LIMIT 5
+
+
+/* Utility functions used by the testing. */
+void free_int(void* int_data)
 {
-    struct ll_list *ll;
-    ll = ll_init(sizeof(int));
-    ll_free(ll);
+    free(int_data);
+    return;
 }
 
-
-void test_ll_append(void **state)
+void* copy_int(void* int_data)
 {
+    int *data;
+    data = malloc(sizeof(int));
+    *data = *(int *)int_data;
+    return data;
+}
 
-    struct ll_list *ll;
-    int data;
+/* Linked list testing. */
 
-    ll = ll_init(sizeof(int));
-    data = 1;
-    ll_append(ll, &data);
-    data = 2;
-    ll_append(ll, &data);
-    data = 3;
-    ll_append(ll, &data);
-    data = 4;
-    ll_append(ll, &data);
-    ll_free(ll);
+void test_ll_free(void **state)
+{
+    int i;
+    Node *head;
+    head = NULL;
+
+    ll_free(&head, free_int);
+    assert(head == NULL);
+
+    for (i=0; i<LIMIT; i++)
+    {
+        int *data;
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push(&head, data);
+    }
+
+    ll_free(&head, free_int);
+    assert(head == NULL);
 }
 
 
 void test_ll_pop(void **state)
 {
+    int i;
+    Node *head;
 
-    struct ll_list *ll;
-    int data;
-    int *popped_data;
+    head = NULL;
+    expect_assert_failure(ll_pop(&head));
 
-    ll = ll_init(sizeof(int));
-    data = 1;
-    ll_append(ll, &data);
-    data = 2;
-    ll_append(ll, &data);
-    data = 3;
-    ll_append(ll, &data);
-    data = 4;
-    ll_append(ll, &data);
+    for (i=0; i<LIMIT; i++)
+    {
+        int *data;
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push(&head, data);
+    }
 
-    popped_data = ll_pop(ll);
-    assert_int_equal(*popped_data, 1);
-    free(popped_data);
+    for (i=LIMIT-1; i>=0; i--)
+    {
+        int *data;
+        data = ll_pop(&head);
+        assert_int_equal(*data, i);
+        free(data);
+    }
 
-    popped_data = ll_pop(ll);
-    assert_int_equal(*popped_data, 2);
-    free(popped_data);
+    expect_assert_failure(ll_pop(&head));
+}
 
-    popped_data = ll_pop(ll);
-    assert_int_equal(*popped_data, 3);
-    free(popped_data);
 
-    popped_data = ll_pop(ll);
-    assert_int_equal(*popped_data, 4);
-    free(popped_data);
+void test_ll_push(void **state)
+{
+    int i;
+    Node *head;
 
-    expect_assert_failure(ll_pop(ll));
+    head = NULL;
 
-    ll_free(ll);
+    for (i=0; i<LIMIT; i++)
+    {
+        int *data;
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push(&head, data);
+        assert(head != NULL);
+        assert(head->data == data);
+    }
+
+    ll_free(&head, free_int);
 }
 
 
 void test_ll_length(void **state)
 {
-    struct ll_list *ll;
-    int data;
+    int i;
+    Node *head;
 
-    ll = ll_init(sizeof(int));
-    assert_int_equal(ll_length(ll), 0);
+    head = NULL;
 
-    data = 1;
-    ll_append(ll, &data);
-    assert_int_equal(ll_length(ll), 1);
-    data = 2;
+    for (i=0; i<LIMIT; i++)
+    {
+        int *data;
+        assert_int_equal(ll_length(head), i);
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push(&head, data);
+        assert_int_equal(ll_length(head), i+1);
+    }
 
-    ll_append(ll, &data);
-    assert_int_equal(ll_length(ll), 2);
-    data = 3;
-
-    ll_append(ll, &data);
-    assert_int_equal(ll_length(ll), 3);
-    data = 4;
-
-    ll_append(ll, &data);
-    assert_int_equal(ll_length(ll), 4);
-    ll_free(ll);
-
+    ll_free(&head, free_int);
 }
 
 
 void test_ll_copy(void **state)
 {
-    struct ll_list *ll;
-    struct ll_list *copy;
-    int data;
+    int i;
+    Node *head;
+    Node *copy;
 
-    ll = ll_init(sizeof(int));
+    head = NULL;
 
-    copy = ll_copy(ll);
-    assert_int_equal(ll_length(copy), 0);
-    ll_free(copy);
+    for (i=0; i<LIMIT; i++)
+    {
+        int *data;
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push(&head, data);
+    }
 
-    data = 1;
-    ll_append(ll, &data);
-    copy = ll_copy(ll);
-    assert_int_equal(ll_length(copy), 1);
-    ll_free(copy);
+    copy = ll_copy(head, copy_int);
 
-    data = 2;
-    ll_append(ll, &data);
-    copy = ll_copy(ll);
-    assert_int_equal(ll_length(copy), 2);
-    ll_free(copy);
+    for (i=LIMIT-1; i>=0; i--)
+    {
+        int *data_a;
+        int *data_b;
 
-    data = 3;
-    ll_append(ll, &data);
-    copy = ll_copy(ll);
-    assert_int_equal(ll_length(copy), 3);
-    ll_free(copy);
+        data_a = ll_pop(&head);
+        data_b = ll_pop(&copy);
 
-    data = 4;
-    ll_append(ll, &data);
-    copy = ll_copy(ll);
-    assert_int_equal(ll_length(copy), 4);
-    ll_free(copy);
+        assert_int_equal(*data_a, *data_b);
 
-    ll_free(ll);
+        free(data_a);
+        free(data_b);
+    }
 
+    expect_assert_failure(ll_pop(&head));
+    expect_assert_failure(ll_pop(&copy));
+}
+
+
+void test_ll_sort(void **state)
+{
+    assert(FALSE);
+}
+
+
+void test_ll_is_subset_of(void **state)
+{
+    assert(FALSE);
 }
 
 
 int main(int argc, char* argv[]) {
     const UnitTest tests[] = {
-        unit_test(test_ll_init),
-        unit_test(test_ll_append),
+        unit_test(test_ll_free),
         unit_test(test_ll_pop),
+        unit_test(test_ll_push),
         unit_test(test_ll_length),
         unit_test(test_ll_copy),
+        /*
+        unit_test(test_ll_sort),
+        unit_test(test_ll_is_subset_of),
+        */
     };
     return run_tests(tests);
 }
