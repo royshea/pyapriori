@@ -1,110 +1,171 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "linked_list.h"
 
 
-int add(struct node **head, void* d)
+#if UNIT_TESTING
+
+/* Redefine assert for use with cmockery when unit testing. */
+extern void mock_assert(const int result, const char* const expression,
+        const char * const file, const int line);
+#undef assert
+#define assert(expression) \
+        mock_assert((int)(expression), #expression, __FILE__, __LINE__);
+
+/* Redefine malloc operations for use with cmockery when unit testing. */
+
+extern void* _test_malloc(const size_t size, const char* file, const int
+        line);
+extern void* _test_calloc(const size_t number_of_elements, const size_t
+        size, const char* file, const int line);
+extern void _test_free(void* const ptr, const char* file, const int
+        line);
+
+#define malloc(size) _test_malloc(size, __FILE__, __LINE__)
+#define calloc(num, size) _test_calloc(num, size, __FILE__, __LINE__)
+#define free(ptr) _test_free(ptr, __FILE__, __LINE__)
+
+#endif /* UNIT_TESTING */
+
+
+struct ll_list* ll_init(size_t data_size)
 {
-    if (*head == NULL)
+    struct ll_list *ll;
+
+    /* Create an empty linked list that knows the size of data it
+     * stores. */
+    ll = malloc(sizeof(struct ll_list));
+    assert(ll != NULL);
+    ll->head = NULL;
+    ll->tail = NULL;
+    ll->data_size = data_size;
+
+    return ll;
+}
+
+
+void ll_append(struct ll_list *ll, void* data)
+{
+    struct ll_node* new_tail;
+
+    assert(ll != NULL);
+    assert((ll->head != NULL && ll->tail != NULL) ||
+            (ll->head == NULL && ll->tail == NULL));
+
+    /* Create new list node. */
+    new_tail = malloc(sizeof(struct ll_node));
+    assert(new_tail != NULL);
+
+    new_tail->data = malloc(ll->data_size);
+    assert(new_tail->data != NULL);
+
+    memcpy(new_tail->data, data, ll->data_size);
+    new_tail->next = NULL;
+
+    if (ll->head == NULL && ll->tail == NULL)
     {
-        if ((*head = malloc(sizeof(struct node))) == NULL)
-        {
-            printf("Memory allocation error");
-            return 0;
-        }
-        (*head)->next = NULL;
-        (*head)->data = d;
+        /* If this is the first node in the list then the head needs to
+         * be updated to also point to this node. */
+        ll->head = new_tail;
+        ll->tail = new_tail;
     }
     else
     {
-        struct node *tmp = *head;
-        while (tmp->next != NULL)
-        {
-            tmp = tmp->next;
-        }
-
-        if ((tmp->next = malloc(sizeof(struct node))) == NULL)
-        {
-            printf("Memory allocation error");
-            return 0;
-        }
-        tmp->next->next = NULL;
-        tmp->next->data = d;
+        /* Else append the node to the linked list. */
+        ll->tail->next = new_tail;
+        ll->tail = new_tail;
     }
-    return 1;
 
+    return;
 }
 
 
-void free_list(struct node **n, void (*free_funct)(void *))
+void* ll_pop(struct ll_list *ll)
 {
-    struct node *current;
-    struct node *next;
-    for (current = *n; current != NULL; current = next)
-    {
-        next = current->next;
-        (*free_funct)(current->data);
-        free(current);
-    }
-    *n = NULL;
+    void* tmp_data;
+    struct ll_node* old_head;
+
+    assert(ll != NULL);
+    assert(ll->head != NULL);
+
+    /* Update the head of the list. */
+    old_head = ll->head;
+    ll->head = ll->head->next;
+
+    /* Grab data from old head and release the node. */
+    tmp_data = old_head->data;
+    free(old_head);
+
+    return tmp_data;
 }
 
 
-int get_len_list(struct node *n)
+void ll_free(struct ll_list* ll)
 {
-    int len = 0;
-    while (n != NULL)
+
+    struct ll_node *tmp_node;
+
+    assert(ll != NULL);
+
+    /* Traverse the list freeing nodes and data. */
+    while (ll->head != NULL)
     {
-        len += 1;
-        n = n->next;
+        tmp_node = ll->head;
+        ll->head = ll->head->next;
+        free(tmp_node->data);
+        free(tmp_node);
     }
-    return len;
+
+    /* Free the linked list container. */
+    free(ll);
+
+    return;
 }
 
 
-struct node *get_node(struct node *n, int index)
+int ll_length(struct ll_list* ll)
 {
-    int count = 0;
-    while (n != NULL)
-    {
-        if (count == index)
-        {
-            return n;
-        }
-        count++;
-        n = n->next;
-    }
+    uint16_t length = 0;
+    struct ll_node *tmp_node;
 
-    return NULL;
+    assert(ll != NULL);
+
+    /* Iterate through and count nodes. */
+    for (tmp_node = ll->head; tmp_node != NULL; tmp_node = tmp_node->next)
+    {
+        length += 1;
+    }
+    return length;
 }
 
-/* TODO: This assumes that data is an integer */
-struct node *copy_list(struct node *n, int data_size)
+
+struct ll_list* ll_copy(struct ll_list* ll)
 {
-    void *tmp = NULL;
-    struct node *iter = n;
-    struct node *copy = NULL;
-    while (iter != NULL)
+    struct ll_list *copy;
+    struct ll_node *tmp_node;
+
+    /* Create new container for the copied list. */
+    copy = ll_init(ll->data_size);
+
+    /* Iterate through list making copies of nodes. */
+    tmp_node = ll->head;
+    for (tmp_node = ll->head; tmp_node != NULL; tmp_node = tmp_node->next)
     {
-        if ((tmp = malloc(data_size)) == NULL)
-        {
-            printf("Memory allocation error");
-            return 0;
-        }
-        memcpy(tmp, iter->data, data_size);
-        add(&copy,(void *)tmp);
-        iter = iter->next;
+        ll_append(copy, tmp_node->data);
     }
+
     return copy;
 }
 
-/* merge the lists.. */
-struct node *merge(struct node *head_one, struct node *head_two,
-        int (*cmp)(void *, void *))
-{
-    struct node *head_three;
 
+#if 0
+/* merge the lists.. */
+static struct ll_list *ll_merge(struct ll_list* ll_1, struct ll_list*
+        ll_2, int (*cmp)(void *, void *))
+{
+    struct ll_list *merged;
 
     /* TODO: Convert recursion into a loop. */
     if (head_one == NULL)
@@ -128,10 +189,10 @@ struct node *merge(struct node *head_one, struct node *head_two,
 }
 
 
-struct node *mergesort(struct node *head, int (*cmp)(void *, void *))
+struct ll_node *mergesort(struct ll_node *head, int (*cmp)(void *, void *))
 {
-    struct node *head_one;
-    struct node *head_two;
+    struct ll_node *head_one;
+    struct ll_node *head_two;
 
     if ((head == NULL) || (head->next == NULL))
         return head;
@@ -151,17 +212,17 @@ struct node *mergesort(struct node *head, int (*cmp)(void *, void *))
 
 
 /* TODO / BUG: This assumes that data is sorted. */
-int is_subset(struct node *l_1, struct node *l_2, int (*cmp)(void *, void *))
+int is_subset(struct ll_node *l_1, struct ll_node *l_2, int (*cmp)(void *, void *))
     /* Returns if l_2 is a subset of l_1 */
 {
     unsigned char inside;
-    struct node *iter_1;
-    struct node *iter_2 = l_2;
+    struct ll_node *iter_1;
+    struct ll_node *iter_2 = l_2;
 
     if (l_1 == NULL || l_2 == NULL)
         return FALSE;
 
-    if (get_len_list(l_1) < get_len_list(l_2))
+    if (ll_length(l_1) < ll_length(l_2))
         return FALSE;
 
     while (iter_2 != NULL)
@@ -181,3 +242,22 @@ int is_subset(struct node *l_1, struct node *l_2, int (*cmp)(void *, void *))
 
     return TRUE;
 }
+#endif
+
+/*
+struct ll_node *get_node(struct ll_node *n, int index)
+{
+    int count = 0;
+    while (n != NULL)
+    {
+        if (count == index)
+        {
+            return n;
+        }
+        count++;
+        n = n->next;
+    }
+
+    return NULL;
+}
+*/

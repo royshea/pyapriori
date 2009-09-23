@@ -1,5 +1,5 @@
 # Author: Roy Shea (royshea@gmail.com)
-# Date:  9/21/09
+# Date:  9/22/09
 
 ####
 # Project specific configuration
@@ -9,6 +9,7 @@ LIB = libapriori.a
 
 OBJECTS = $(SOURCES:.c=.o)
 
+
 ####
 # General compiler configuration 
 ####
@@ -16,10 +17,11 @@ CC = gcc
 AR = ar
 CFLAGS = -g -Wall -pedantic
 
+
 ####
 # Target specific default rulse
 ####
-all: clean $(LIB)
+all: $(LIB)
 
 
 ####
@@ -29,7 +31,8 @@ $(LIB): $(OBJECTS)
 	$(AR) rcs $(LIB) $(OBJECTS)
 
 .c.o:
-	$(CC) $(TARGETFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(DEFS) $(CFLAGS) -c $< -o $@
+
 
 ####
 # Clean up our mess...
