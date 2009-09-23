@@ -11,13 +11,8 @@
 #define FALSE 0
 #endif
 
-
-/* Basic data structure for a node. */
-typedef struct _ll_node
-{
-    void* data;
-    struct _ll_node* next;
-} Node;
+/* Abstract linked list node. */
+typedef struct _ll_node Node;
 
 /* Add element data to the head of the linked list. */
 void ll_push(Node **head, void *data);

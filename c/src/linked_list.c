@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "linked_list.h"
+#include "linked_list_private.h"
 
 
 #if UNIT_TESTING

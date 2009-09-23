@@ -116,7 +116,6 @@ void test_ll_push(void **state)
         *data = i;
         ll_push(&head, data);
         assert_true(head != NULL);
-        assert_true(head->data == data);
     }
 
     ll_free(&head, free_int);
