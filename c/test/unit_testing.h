@@ -1,6 +1,8 @@
 #ifndef UNIT_TESTING_
 #define UNIT_TESTING_
 
+#include <stddef.h>
+
 /* Redefine assert for use with cmockery when unit testing. */
 extern void mock_assert(const int result, const char* const expression,
         const char * const file, const int line);

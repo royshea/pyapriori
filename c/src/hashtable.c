@@ -1,7 +1,7 @@
 #include "hashtable_private.h"
 
 #ifdef UNIT_TESTING
-#include "unit_testing.h"
+#include "../test/unit_testing.h"
 #endif /* UNIT_TESTING */
 
 static Hashtable *current_ht = NULL;
