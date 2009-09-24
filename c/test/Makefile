@@ -12,7 +12,7 @@ LIBS = -L../src -lapriori -lcmockery
 ####
 # Target specific default rulse
 ####
-all: test_linked_list test_hashtable
+all: test_linked_list test_hashtable test_hashtree
 
 test_linked_list: test_linked_list.o
 	$(CC) $(CFLAGS) $< -o $@ $(LIBS)
@@ -20,6 +20,8 @@ test_linked_list: test_linked_list.o
 test_hashtable: test_hashtable.o
 	$(CC) $(CFLAGS) $< -o $@ $(LIBS)
 
+test_hashtree: test_hashtree.o
+	$(CC) $(CFLAGS) $< -o $@ $(LIBS)
 
 
 ####
