@@ -4,7 +4,7 @@
 ####
 # Project specific configuration
 ####
-SOURCES = linked_list.c
+SOURCES = linked_list.c hashtable.c
 LIB = libapriori.a
 
 OBJECTS = $(SOURCES:.c=.o)
@@ -19,7 +19,7 @@ CFLAGS = -g -Wall -pedantic
 
 
 ####
-# Target specific default rulse
+# Target specific default rules
 ####
 all: $(LIB)
 
@@ -39,3 +39,10 @@ $(LIB): $(OBJECTS)
 ####
 clean:
 	rm -f *.o
+
+####
+# Extra dependencies
+####
+linked_list.o: linked_list_private.h unit_testing.h
+
+hashtable.o: linked_list.c hashtable_private.h unit_testing.h

@@ -3,25 +3,23 @@
 
 
 ####
-# Project specific configuration
-####
-SOURCES = test_linked_list.c
-OBJECTS = $(SOURCES:.c=.o)
-
-####
 # General compiler configuration 
 ####
 CC = gcc
 CFLAGS = -g -Wall -pedantic -I../src
-
+LIBS = -L../src -lapriori -lcmockery
 
 ####
 # Target specific default rulse
 ####
-all: test_linked_list
+all: test_linked_list test_hashtable
 
-test_linked_list: $(OBJECTS)
-	$(CC) $(CFLAGS) $< -o $@ -L../src -lapriori -lcmockery
+test_linked_list: test_linked_list.o
+	$(CC) $(CFLAGS) $< -o $@ $(LIBS)
+
+test_hashtable: test_hashtable.o
+	$(CC) $(CFLAGS) $< -o $@ $(LIBS)
+
 
 
 ####
