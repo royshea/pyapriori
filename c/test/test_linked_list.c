@@ -5,24 +5,7 @@
 #include <google/cmockery.h>
 
 #include "linked_list.h"
-
-/* Redefine malloc operations for use with cmockery when unit testing. */
-
-extern void* _test_malloc(const size_t size, const char* file, const int
-        line);
-extern void* _test_calloc(const size_t number_of_elements, const size_t
-        size, const char* file, const int line);
-extern void _test_free(void* const ptr, const char* file, const int
-        line);
-
-#define malloc(size) _test_malloc(size, __FILE__, __LINE__)
-#define calloc(num, size) _test_calloc(num, size, __FILE__, __LINE__)
-#define free(ptr) _test_free(ptr, __FILE__, __LINE__)
-
-/* Redefine assert for use with cmockery when unit testing. */
-
-#define assert(expression) \
-        mock_assert((int)(expression), #expression, __FILE__, __LINE__);
+#include "unit_testing.h"
 
 #define LIMIT 5
 
@@ -276,6 +259,35 @@ void test_ll_sort(void **state)
 }
 
 
+void test_ll_search(void **state)
+{
+    int i;
+    int *data;
+    Node *head;
+
+    head = NULL;
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push(&head, data);
+    }
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = ll_search(&i, head, compare_int);
+        assert_true(data != NULL);
+        assert_int_equal(*data, i);
+    }
+    i = LIMIT + 1;
+    data = ll_search(&i, head, compare_int);
+    assert_true(data == NULL);
+
+    ll_free(&head, free_int);
+}
+
+
 void test_ll_is_subset_of(void **state)
 {
     int i;
@@ -342,6 +354,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_ll_length),
         unit_test(test_ll_copy),
         unit_test(test_ll_sort),
+        unit_test(test_ll_search),
         unit_test(test_ll_is_subset_of),
     };
     return run_tests(tests);

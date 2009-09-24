@@ -161,27 +161,28 @@ void ll_sort(Node **head, int16_t(*compare)(void*, void*))
 }
 
 
+void* ll_search(void* data, Node *head, int16_t(*compare)(void *,void *))
+{
+    Node *index;
+    for (index = head; index != NULL; index = index->next)
+    {
+        if (compare(data, index->data) == 0)
+            return index->data;
+    }
+    return NULL;
+}
+
+
 uint8_t ll_is_subset_of(Node *subset, Node *head,
         int16_t(*compare)(void *,void *))
 {
     Node *subset_index;
-    Node *head_index;
-    uint8_t found;
 
     /* Verify that each element of subset is somewhere within head. */
     for (subset_index = subset; subset_index != NULL; subset_index =
             subset_index->next)
     {
-        found = FALSE;
-        for (head_index = head; found == FALSE && head_index != NULL;
-                head_index = head_index->next)
-        {
-            if (compare(subset_index->data, head_index->data) == 0)
-                found = TRUE;
-        }
-
-        /* Return immediately with FALSE if an element was not found. */
-        if (found == FALSE)
+        if (ll_search(subset_index->data, head, compare) == NULL)
             return FALSE;
     }
     return TRUE;
