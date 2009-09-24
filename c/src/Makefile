@@ -43,6 +43,6 @@ clean:
 ####
 # Extra dependencies
 ####
-linked_list.o: linked_list_private.h unit_testing.h
+linked_list.o: linked_list_private.h
 
-hashtable.o: linked_list.c hashtable_private.h unit_testing.h
+hashtable.o: linked_list.c hashtable_private.h
