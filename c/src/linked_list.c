@@ -173,6 +173,51 @@ void* ll_search(void* data, Node *head, int16_t(*compare)(void *,void *))
 }
 
 
+void* ll_remove(void* data, Node **head, int16_t(*compare)(void *,void *))
+{
+    Node *matched_node;
+    Node *index;
+    void *match;
+
+    /* Initialize matched node to NULL assuming no match. */
+    matched_node = NULL;
+
+    /* Basic case for empty list. */
+    if (*head == NULL)
+        return NULL;
+
+    if ((compare(data, (*head)->data)) == 0)
+    {
+        /* Special case for removing the first item in the linked list. */
+        matched_node = *head;
+        *head = matched_node->next;
+    }
+    else
+    {
+        /* Walk through list always looking for a match one step ahead. */
+        for (index = *head; index->next != NULL; index = index->next)
+        {
+            if (compare(data, index->next->data) == 0)
+            {
+                matched_node = index->next;
+                index->next = matched_node->next;
+                break;
+            }
+        }
+    }
+
+    /* If a matched node is found remove it from the list. */
+    if (matched_node != NULL)
+    {
+        match = matched_node->data;
+        free(matched_node);
+        return match;
+    }
+
+    return NULL;
+}
+
+
 uint8_t ll_is_subset_of(Node *subset, Node *head,
         int16_t(*compare)(void *,void *))
 {

@@ -288,6 +288,35 @@ void test_ll_search(void **state)
 }
 
 
+void test_ll_remove(void **state)
+{
+    int i;
+    int *data;
+    Node *head;
+
+    head = NULL;
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push(&head, data);
+    }
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = ll_remove(&i, &head, compare_int);
+        assert_true(data != NULL);
+        assert_int_equal(*data, i);
+        free(data);
+        data = ll_remove(&i, &head, compare_int);
+        assert_true(data == NULL);
+    }
+
+    ll_free(&head, free_int);
+}
+
+
 void test_ll_is_subset_of(void **state)
 {
     int i;
@@ -355,6 +384,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_ll_copy),
         unit_test(test_ll_sort),
         unit_test(test_ll_search),
+        unit_test(test_ll_remove),
         unit_test(test_ll_is_subset_of),
     };
     return run_tests(tests);

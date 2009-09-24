@@ -35,6 +35,10 @@ void ll_sort(Node **head, int16_t(*compare)(void*, void*));
 /* Search for data in a list and, if found, return its reference. */
 void* ll_search(void* data, Node *head, int16_t(*compare)(void *,void *));
 
+/* Search for data in a list and, if found, remove from the list and
+ * return its reference. */
+void* ll_remove(void* data, Node **head, int16_t(*compare)(void *,void *));
+
 /* Return TRUE (1) if the list subset is a subset (order independent)
  * within head. */
 uint8_t ll_is_subset_of(Node *subset, Node *head,
