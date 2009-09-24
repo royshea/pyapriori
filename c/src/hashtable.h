@@ -1,5 +1,5 @@
-#ifndef HASH_TABLE_
-#define HASH_TABLE_
+#ifndef HASHTABLE_
+#define HASHTABLE_
 
 #include <stdint.h>
 
@@ -18,4 +18,4 @@ void* ht_remove(Hashtable *table, uint16_t key);
 
 void ht_free(Hashtable *table);
 
-#endif /* HASH_TABLE_ */
+#endif /* HASHTABLE_ */

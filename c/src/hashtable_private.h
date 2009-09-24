@@ -1,5 +1,5 @@
-#ifndef HASH_TABLE_PRIVATE_
-#define HASH_TABLE_PRIVATE_
+#ifndef HASHTABLE_PRIVATE_
+#define HASHTABLE_PRIVATE_
 
 #include "hashtable.h"
 #include "linked_list.h"
@@ -40,5 +40,4 @@ struct _ht_table
 
 };
 
-#endif /* HASH_TABLE_PRIVATE_ */
-
+#endif /* HASHTABLE_PRIVATE_ */
