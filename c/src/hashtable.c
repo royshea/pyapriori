@@ -12,7 +12,6 @@ static Hashtable *current_ht = NULL;
  * within an entry. */
 static void free_entry(void* entry)
 {
-    current_ht->free_key(((Entry *)entry)->key);
     current_ht->free_data(((Entry *)entry)->data);
     free(entry);
     return;
@@ -20,12 +19,9 @@ static void free_entry(void* entry)
 
 
 Hashtable* ht_create(uint16_t size_hint,
-        uint16_t(*hash_function)(void*),
-        int16_t(*compare)(void*, void *),
+        uint16_t(*hash_function)(uint16_t),
         void*(*deep_copy)(void*),
-        void(*free_data)(void*),
-        void(*free_key)(void*)
-        )
+        void(*free_data)(void*))
 {
     Hashtable *ht;
     uint8_t i;
@@ -45,10 +41,8 @@ Hashtable* ht_create(uint16_t size_hint,
     ht->size = prime_table_size[i];
     ht->count = 0;
     ht->hash_function = hash_function;
-    ht->compare = compare;
     ht->deep_copy = deep_copy;
     ht->free_data = free_data;
-    ht->free_key = free_key;
 
     ht->table = malloc(sizeof(Node*) * ht->size);
     assert(ht->table != NULL);
@@ -61,10 +55,13 @@ Hashtable* ht_create(uint16_t size_hint,
 }
 
 
-void ht_insert(Hashtable *ht, void *key, void* data)
+void ht_insert(Hashtable *ht, uint16_t key, void* data)
 {
     Entry *e;
     uint16_t index;
+
+    /* Forbid duplicate keys. */
+    assert(ht_search(ht, key) == NULL);
 
     /* Create entry to insert into table. */
     e = malloc(sizeof(Entry));
@@ -79,15 +76,33 @@ void ht_insert(Hashtable *ht, void *key, void* data)
 }
 
 
-void* ht_search(Hashtable *ht, void *key)
+static int16_t compare_entry_key(void* entry_a, void* entry_b)
 {
-    uint16_t index;
-    index = ht->hash_function(key) % ht->size;
-    return NULL;
+    return ((Entry *)entry_a)->key - ((Entry *)entry_b)->key;
 }
 
 
-void* ht_remove(Hashtable *ht, void *key);
+void* ht_search(Hashtable *ht, uint16_t key)
+{
+    uint16_t index;
+    Entry tmp_entry;
+    Entry *match;
+
+    /* Create a dumy entry with correct key to match against. */
+    tmp_entry.key = key;
+
+    /* Look for matching entry in the table. */
+    index = ht->hash_function(key) % ht->size;
+    match = ll_search(&tmp_entry, ht->table[index], compare_entry_key);
+
+    /* Return pointer to data if found. */
+    if (match == NULL)
+        return NULL;
+    return match->data;
+}
+
+
+void* ht_remove(Hashtable *ht, uint16_t key);
 
 
 void ht_free(Hashtable *ht)

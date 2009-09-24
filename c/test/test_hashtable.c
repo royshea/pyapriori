@@ -8,15 +8,15 @@
 
 #include "unit_testing.h"
 
-#define LIMIT 5
+#define LIMIT 20
 
 
 /* Utility functions used to construct a hash table using integer keys
  * and data. */
 
-uint16_t hash_int(void* key)
+uint16_t hash_int(uint16_t key)
 {
-    return *(int *)key;
+    return key;
 }
 
 
@@ -48,21 +48,65 @@ void test_ht_create(void **state)
 {
     Hashtable *ht;
 
-    expect_assert_failure(ht_create( -1, hash_int, compare_int, copy_int,
-                free_int, free_int));
+    expect_assert_failure(ht_create( -1, hash_int, copy_int, free_int));
 
-    ht = ht_create(0, hash_int, compare_int, copy_int, free_int, free_int);
+    ht = ht_create(0, hash_int, copy_int, free_int);
     ht_free(ht);
 }
 
 
 void test_ht_insert(void **state)
 {
+    Hashtable *ht;
+    int *data;
+    int i;
+
+    ht = ht_create(0, hash_int, copy_int, free_int);
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = i;
+        ht_insert(ht, i, data);
+    }
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = i;
+        expect_assert_failure(ht_insert(ht, i, data));
+        free(data);
+    }
+
+    ht_free(ht);
 }
 
 
 void test_ht_search(void **state)
 {
+    Hashtable *ht;
+    int *data;
+    int i;
+
+    ht = ht_create(0, hash_int, copy_int, free_int);
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = i;
+        ht_insert(ht, i, data);
+    }
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = ht_search(ht, i);
+        assert_false(data == NULL);
+        assert_int_equal(*data, i);
+    }
+    data = ht_search(ht, LIMIT + 1);
+    assert_true(data == NULL);
+
+    ht_free(ht);
 }
 
 
@@ -75,18 +119,15 @@ void test_ht_free(void **state)
 {
     Hashtable *ht;
     int *data;
-    int *key;
     int i;
 
-    ht = ht_create(0, hash_int, compare_int, copy_int, free_int, free_int);
+    ht = ht_create(0, hash_int, copy_int, free_int);
 
     for (i=0; i<LIMIT; i++)
     {
         data = malloc(sizeof(int));
         *data = i;
-        key = malloc(sizeof(int));
-        *key = i;
-        ht_insert(ht, key, data);
+        ht_insert(ht, i, data);
     }
 
     ht_free(ht);

@@ -19,7 +19,7 @@ static const uint8_t prime_count =
 
 typedef struct _ht_entry
 {
-    void *key;
+    uint16_t key;
     void *data;
 } Entry;
 
@@ -31,11 +31,9 @@ struct _ht_table
     uint16_t count;
 
     /* Type specific functions used by table. */
-    uint16_t (*hash_function) (void*);
-    int16_t (*compare) (void*, void*);
+    uint16_t (*hash_function) (uint16_t);
     void* (*deep_copy) (void*);
     void (*free_data) (void*);
-    void (*free_key) (void*);
 
     /* Array of linked lists making up the table data. */
     Node **table;
