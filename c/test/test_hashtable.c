@@ -36,12 +36,6 @@ void* copy_int(void* int_data)
 }
 
 
-int16_t compare_int(void* int_a, void* int_b)
-{
-    return *(int16_t*)int_a - *(int16_t*)int_b;
-}
-
-
 /* Tests. */
 
 void test_ht_create(void **state)
