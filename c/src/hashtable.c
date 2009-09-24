@@ -102,7 +102,27 @@ void* ht_search(Hashtable *ht, uint16_t key)
 }
 
 
-void* ht_remove(Hashtable *ht, uint16_t key);
+void* ht_remove(Hashtable *ht, uint16_t key)
+{
+    uint16_t index;
+    Entry tmp_entry;
+    Entry *match;
+    void *data;
+
+    /* Create a dumy entry with correct key to match against. */
+    tmp_entry.key = key;
+
+    /* Look for matching entry in the table. */
+    index = ht->hash_function(key) % ht->size;
+    match = ll_remove(&tmp_entry, &(ht->table[index]), compare_entry_key);
+
+    /* Return pointer to data if found. */
+    if (match == NULL)
+        return NULL;
+    data = match->data;
+    free(match);
+    return data;
+}
 
 
 void ht_free(Hashtable *ht)

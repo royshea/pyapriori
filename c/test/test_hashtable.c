@@ -112,6 +112,30 @@ void test_ht_search(void **state)
 
 void test_ht_remove(void **state)
 {
+    Hashtable *ht;
+    int *data;
+    int i;
+
+    ht = ht_create(0, hash_int, copy_int, free_int);
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = i;
+        ht_insert(ht, i, data);
+    }
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = ht_remove(ht, i);
+        assert_false(data == NULL);
+        assert_int_equal(*data, i);
+        free(data);
+        data = ht_remove(ht, i);
+        assert_true(data == NULL);
+    }
+
+    ht_free(ht);
 }
 
 
