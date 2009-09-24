@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <assert.h>
+
 #include "hashtable_private.h"
 
 #ifdef UNIT_TESTING

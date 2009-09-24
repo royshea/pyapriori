@@ -5,23 +5,42 @@
 # Project specific configuration
 ####
 SOURCES = linked_list.c hashtable.c
-LIB = libapriori.a
-
 OBJECTS = $(SOURCES:.c=.o)
-
-
-####
-# General compiler configuration 
-####
-CC = gcc
-AR = ar
 CFLAGS = -g -Wall -pedantic
 
 
 ####
-# Target specific default rules
+# Compiler configuration 
 ####
-all: $(LIB)
+ifeq ($(MAKECMDGOALS),avr)
+CC = avr-gcc
+AR = avr-ar
+LIB = libapriori-avr.a
+TARGETFLAGS = -mmcu=atmega128
+
+else ifeq ($(MAKECMDGOALS),msp430)
+CC = msp430-gcc
+AR = msp430-ar
+LIB = libapriori-msp430.a
+TARGETFLAGS = -specs=/usr/lib/ncc/tdspecs -mdisable-hwmul -mmcu=msp430x1611
+
+else ifneq ($(MAKECMDGOALS),clean)
+CC = gcc
+AR = ar
+LIB = libapriori.a
+
+endif
+
+
+####
+# Target specific default rules.  Explicit clean is added to keep builds
+# of different architectures clean.
+####
+all: clean $(LIB)
+
+msp430: clean $(LIB)
+
+avr: clean $(LIB)
 
 
 ####
@@ -31,7 +50,7 @@ $(LIB): $(OBJECTS)
 	$(AR) rcs $(LIB) $(OBJECTS)
 
 .c.o:
-	$(CC) $(DEFS) $(CFLAGS) -c $< -o $@
+	$(CC) $(TARGETFLAGS) $(DEFS) $(CFLAGS) -c $< -o $@
 
 
 ####
