@@ -14,6 +14,8 @@ void ht_insert(Hashtable *table, uint16_t key, void* data);
 
 void* ht_search(Hashtable *table, uint16_t key);
 
+uint16_t ht_num_entries(Hashtable *table);
+
 void* ht_remove(Hashtable *table, uint16_t key);
 
 void ht_free(Hashtable *table);

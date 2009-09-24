@@ -160,7 +160,7 @@ void ll_sort(Node **head, int16_t(*compare)(void*, void*))
 }
 
 
-void* ll_search(void* data, Node *head, int16_t(*compare)(void *,void *))
+void* ll_search(Node *head, void* data, int16_t(*compare)(void *,void *))
 {
     Node *index;
     for (index = head; index != NULL; index = index->next)
@@ -172,7 +172,7 @@ void* ll_search(void* data, Node *head, int16_t(*compare)(void *,void *))
 }
 
 
-void* ll_remove(void* data, Node **head, int16_t(*compare)(void *,void *))
+void* ll_remove(Node **head, void* data, int16_t(*compare)(void *,void *))
 {
     Node *matched_node;
     Node *index;
@@ -217,7 +217,7 @@ void* ll_remove(void* data, Node **head, int16_t(*compare)(void *,void *))
 }
 
 
-uint8_t ll_is_subset_of(Node *subset, Node *head,
+uint8_t ll_is_subset_of(Node *head, Node *subset,
         int16_t(*compare)(void *,void *))
 {
     Node *subset_index;
@@ -226,7 +226,7 @@ uint8_t ll_is_subset_of(Node *subset, Node *head,
     for (subset_index = subset; subset_index != NULL; subset_index =
             subset_index->next)
     {
-        if (ll_search(subset_index->data, head, compare) == NULL)
+        if (ll_search(head, subset_index->data, compare) == NULL)
             return FALSE;
     }
     return TRUE;

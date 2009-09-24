@@ -276,12 +276,12 @@ void test_ll_search(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
-        data = ll_search(&i, head, compare_int);
+        data = ll_search(head, &i, compare_int);
         assert_true(data != NULL);
         assert_int_equal(*data, i);
     }
     i = LIMIT + 1;
-    data = ll_search(&i, head, compare_int);
+    data = ll_search(head, &i, compare_int);
     assert_true(data == NULL);
 
     ll_free(&head, free_int);
@@ -305,11 +305,11 @@ void test_ll_remove(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
-        data = ll_remove(&i, &head, compare_int);
+        data = ll_remove(&head, &i, compare_int);
         assert_true(data != NULL);
         assert_int_equal(*data, i);
         free(data);
-        data = ll_remove(&i, &head, compare_int);
+        data = ll_remove(&head, &i, compare_int);
         assert_true(data == NULL);
     }
 
@@ -333,27 +333,27 @@ void test_ll_is_subset_of(void **state)
     }
 
     subset = NULL;
-    assert_true(ll_is_subset_of(subset, head, compare_int));
+    assert_true(ll_is_subset_of(head, subset, compare_int));
 
     data = malloc(sizeof(int));
     *data = 4;
     ll_push(&subset, data);
-    assert_true(ll_is_subset_of(subset, head, compare_int));
+    assert_true(ll_is_subset_of(head, subset, compare_int));
 
     data = malloc(sizeof(int));
     *data = 2;
     ll_push(&subset, data);
-    assert_true(ll_is_subset_of(subset, head, compare_int));
+    assert_true(ll_is_subset_of(head, subset, compare_int));
 
     data = malloc(sizeof(int));
     *data = 6;
     ll_push(&subset, data);
-    assert_false(ll_is_subset_of(subset, head, compare_int));
+    assert_false(ll_is_subset_of(head, subset, compare_int));
 
     data = malloc(sizeof(int));
     *data = 0;
     ll_push(&subset, data);
-    assert_false(ll_is_subset_of(subset, head, compare_int));
+    assert_false(ll_is_subset_of(head, subset, compare_int));
 
     data = ll_pop(&subset);
     free(data);
@@ -363,12 +363,12 @@ void test_ll_is_subset_of(void **state)
     data = malloc(sizeof(int));
     *data = 0;
     ll_push(&subset, data);
-    assert_true(ll_is_subset_of(subset, head, compare_int));
+    assert_true(ll_is_subset_of(head, subset, compare_int));
 
     data = malloc(sizeof(int));
     *data = 4;
     ll_push(&subset, data);
-    assert_true(ll_is_subset_of(subset, head, compare_int));
+    assert_true(ll_is_subset_of(head, subset, compare_int));
 
     ll_free(&subset, free_int);
     ll_free(&head, free_int);

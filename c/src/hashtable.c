@@ -96,12 +96,18 @@ void* ht_search(Hashtable *ht, uint16_t key)
 
     /* Look for matching entry in the table. */
     index = ht->hash_function(key) % ht->size;
-    match = ll_search(&tmp_entry, ht->table[index], compare_entry_key);
+    match = ll_search(ht->table[index], &tmp_entry, compare_entry_key);
 
     /* Return pointer to data if found. */
     if (match == NULL)
         return NULL;
     return match->data;
+}
+
+
+uint16_t ht_num_entries(Hashtable *ht)
+{
+    return ht->count;
 }
 
 
@@ -117,11 +123,12 @@ void* ht_remove(Hashtable *ht, uint16_t key)
 
     /* Look for matching entry in the table. */
     index = ht->hash_function(key) % ht->size;
-    match = ll_remove(&tmp_entry, &(ht->table[index]), compare_entry_key);
+    match = ll_remove(&(ht->table[index]), &tmp_entry, compare_entry_key);
 
     /* Return pointer to data if found. */
     if (match == NULL)
         return NULL;
+    ht->count -= 1;
     data = match->data;
     free(match);
     return data;

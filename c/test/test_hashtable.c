@@ -104,6 +104,27 @@ void test_ht_search(void **state)
 }
 
 
+void test_ht_num_entries(void **state)
+{
+    Hashtable *ht;
+    int *data;
+    int i;
+
+    ht = ht_create(0, hash_int, copy_int, free_int);
+
+    for (i=0; i<LIMIT; i++)
+    {
+        assert_int_equal(ht_num_entries(ht), i);
+        data = malloc(sizeof(int));
+        *data = i;
+        ht_insert(ht, i, data);
+    }
+    assert_int_equal(ht_num_entries(ht), i);
+
+    ht_free(ht);
+}
+
+
 void test_ht_remove(void **state)
 {
     Hashtable *ht;
@@ -157,6 +178,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_ht_create),
         unit_test(test_ht_insert),
         unit_test(test_ht_search),
+        unit_test(test_ht_num_entries),
         unit_test(test_ht_remove),
         unit_test(test_ht_free),
     };
