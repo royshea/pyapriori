@@ -5,6 +5,9 @@
 #include <google/cmockery.h>
 
 #include "hashtree.h"
+#include "hashtree_private.h"
+#include "hashtable_private.h"
+#include "linked_list_private.h"
 #include "linked_list.h"
 
 #include "unit_testing.h"
@@ -43,9 +46,9 @@ void free_int(void* int_data)
 
 void free_key(void* key_list)
 {
-    Node **n;
-    n = (Node **)key_list;
-    ll_free(n, free_int);
+    Node *n;
+    n = key_list;
+    ll_free(&n, free_int);
 }
 
 /* Tests! */
@@ -57,6 +60,12 @@ void test_tree_create(void **state)
     tree = NULL;
     tree = tree_create(5, hash_int, copy_key, free_key);
     assert_true(tree != NULL);
+    assert_true(tree->root != NULL);
+    assert_true(tree->root->key == (uint16_t)-1);
+    assert_true(tree->root->depth == 0);
+    assert_true(tree->root->type == LEAF);
+    assert_true(tree->root->parent == NULL);
+    assert_true(tree->root->table != NULL);
 
     tree_free(tree);
 }
@@ -68,18 +77,47 @@ void test_tree_insert(void **state)
     Node *key_list;
     Node *data;
     uint16_t *sub_key;
+    Node **table;
+    Entry *hash_one_entry;
+    Node *hash_one_keys;
+    Node *stored_key_list;
 
     tree = NULL;
     tree = tree_create(5, hash_int, copy_key, free_key);
     assert_true(tree != NULL);
 
     key_list = NULL;
+
     sub_key = malloc(sizeof(uint16_t));
     *sub_key = 0;
     ll_push(&key_list, sub_key);
 
+    sub_key = malloc(sizeof(uint16_t));
+    *sub_key = 1;
+    ll_push(&key_list, sub_key);
+
     data = ll_copy(key_list, copy_int);
+    assert_true(*(uint16_t *)data->node_data == 1);
+    assert_true(data->next != NULL);
+    assert_true(*(uint16_t *)data->next->node_data == 0);
+    assert_true(data->next->next == NULL);
+
     tree_insert(tree, key_list, data);
+    assert_true(tree->root->table->count == 1);
+
+    table = tree->root->table->table;
+    assert_true(table[0] == NULL);
+    assert_true(table[1] != NULL);
+    assert_true(table[1]->next == NULL);
+    assert_true(table[2] == NULL);
+    assert_true(table[3] == NULL);
+
+    hash_one_keys = table[1];
+    hash_one_entry = hash_one_keys->node_data;
+    stored_key_list = hash_one_entry->entry_data;
+    assert_true(*(uint16_t *)stored_key_list->node_data == 1);
+    assert_true(stored_key_list->next != NULL);
+    assert_true(*((uint16_t*)stored_key_list->next->node_data) == 0);
 
     tree_free(tree);
 }

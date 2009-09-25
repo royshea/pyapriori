@@ -14,7 +14,7 @@ void ll_push(Node **head, void *data)
     new_head = malloc(sizeof(Node));
     assert(new_head != NULL);
 
-    new_head->data = data;
+    new_head->node_data = data;
     new_head->next = *head;
     *head = new_head;
 }
@@ -30,7 +30,7 @@ void* ll_pop(Node **head)
     old_head = *head;
     *head = (*head)->next;
 
-    data = old_head->data;
+    data = old_head->node_data;
     free(old_head);
 
     return data;
@@ -59,7 +59,7 @@ void* ll_copy(Node *head, void*(*deep_copy)(void*))
      * the list using a tail pointer. */
     for (; head != NULL; head = head->next)
     {
-        data_copy = deep_copy(head->data);
+        data_copy = deep_copy(head->node_data);
         if (list_copy == NULL)
         {
             /* Special case for first item put into the list_copy. */
@@ -124,7 +124,7 @@ static Node* ll_merge_sorted(Node **head_a, Node **head_b,
         /* Push the smaller of the two onto the tail of the constructed
          * list.  Note that this requires careful maintenance of the
          * tail pointer. */
-        if (compare((*head_a)->data, (*head_b)->data) <= 0)
+        if (compare((*head_a)->node_data, (*head_b)->node_data) <= 0)
             ll_push(&tail->next, ll_pop(head_a));
         else
             ll_push(&tail->next, ll_pop(head_b));
@@ -170,8 +170,8 @@ void* ll_search(Node *head, void* data, int16_t(*compare)(void *,void *))
     Node *index;
     for (index = head; index != NULL; index = index->next)
     {
-        if (compare(data, index->data) == 0)
-            return index->data;
+        if (compare(data, index->node_data) == 0)
+            return index->node_data;
     }
     return NULL;
 }
@@ -192,7 +192,7 @@ void* ll_get_nth(Node *head, uint8_t index)
         head = head->next;
     }
 
-    return head->data;
+    return head->node_data;
 }
 
 
@@ -209,7 +209,7 @@ void* ll_remove(Node **head, void* data, int16_t(*compare)(void *,void *))
     if (*head == NULL)
         return NULL;
 
-    if ((compare(data, (*head)->data)) == 0)
+    if ((compare(data, (*head)->node_data)) == 0)
     {
         /* Special case for removing the first item in the linked list. */
         matched_node = *head;
@@ -220,7 +220,7 @@ void* ll_remove(Node **head, void* data, int16_t(*compare)(void *,void *))
         /* Walk through list always looking for a match one step ahead. */
         for (index = *head; index->next != NULL; index = index->next)
         {
-            if (compare(data, index->next->data) == 0)
+            if (compare(data, index->next->node_data) == 0)
             {
                 matched_node = index->next;
                 index->next = matched_node->next;
@@ -232,7 +232,7 @@ void* ll_remove(Node **head, void* data, int16_t(*compare)(void *,void *))
     /* If a matched node is found remove it from the list. */
     if (matched_node != NULL)
     {
-        match = matched_node->data;
+        match = matched_node->node_data;
         free(matched_node);
         return match;
     }
@@ -250,7 +250,7 @@ uint8_t ll_is_subset_of(Node *head, Node *subset,
     for (subset_index = subset; subset_index != NULL; subset_index =
             subset_index->next)
     {
-        if (ll_search(head, subset_index->data, compare) == NULL)
+        if (ll_search(head, subset_index->node_data, compare) == NULL)
             return FALSE;
     }
     return TRUE;

@@ -20,7 +20,7 @@ static const uint8_t prime_count =
 typedef struct _ht_entry
 {
     uint16_t key;
-    void *data;
+    void *entry_data;
 } Entry;
 
 

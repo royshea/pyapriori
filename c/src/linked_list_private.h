@@ -6,7 +6,7 @@
 /* Basic data structure for a node. */
 struct _ll_node
 {
-    void* data;
+    void* node_data;
     struct _ll_node* next;
 };
 

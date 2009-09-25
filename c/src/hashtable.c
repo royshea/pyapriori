@@ -15,7 +15,10 @@ static Hashtable *current_ht = NULL;
  * within an entry. */
 static void free_entry(void* entry)
 {
-    current_ht->free_data(((Entry *)entry)->data);
+    Entry *e;
+
+    e = (Entry *)entry;
+    current_ht->free_data(e->entry_data);
     free(entry);
     return;
 }
@@ -70,7 +73,7 @@ void ht_insert(Hashtable *ht, uint16_t key, void* data)
     e = malloc(sizeof(Entry));
     assert(e != NULL);
     e->key = key;
-    e->data = data;
+    e->entry_data = data;
 
     /* Insert entry into the table at correct index. */
     index = ht->hash_function(key) % ht->size;
@@ -101,7 +104,7 @@ void* ht_search(Hashtable *ht, uint16_t key)
     /* Return pointer to data if found. */
     if (match == NULL)
         return NULL;
-    return match->data;
+    return match->entry_data;
 }
 
 
@@ -129,7 +132,7 @@ void* ht_remove(Hashtable *ht, uint16_t key)
     if (match == NULL)
         return NULL;
     ht->count -= 1;
-    data = match->data;
+    data = match->entry_data;
     free(match);
     return data;
 }

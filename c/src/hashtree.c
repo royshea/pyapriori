@@ -7,7 +7,6 @@
 #include "../test/unit_testing.h"
 #endif /* UNIT_TESTING */
 
-
 static void free_tree_node(void* tree_node)
 {
     ht_free(((TreeNode *)tree_node)->table);
