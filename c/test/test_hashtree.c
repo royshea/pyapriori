@@ -60,12 +60,12 @@ void test_tree_create(void **state)
     tree = NULL;
     tree = tree_create(5, hash_int, copy_key, free_key);
     assert_true(tree != NULL);
-    assert_true(tree->root != NULL);
-    assert_true(tree->root->key == (uint16_t)-1);
-    assert_true(tree->root->depth == 0);
-    assert_true(tree->root->type == LEAF);
-    assert_true(tree->root->parent == NULL);
-    assert_true(tree->root->table != NULL);
+    assert_true(tree->root_node != NULL);
+    assert_true(tree->root_node->key == (uint16_t)-1);
+    assert_true(tree->root_node->depth == 0);
+    assert_true(tree->root_node->type == LEAF);
+    assert_true(tree->root_node->parent == NULL);
+    assert_true(tree->root_node->table != NULL);
 
     tree_free(tree);
 }
@@ -75,8 +75,8 @@ void test_tree_insert(void **state)
 {
     Hashtree *tree;
     Node *key_list;
-    Node *data;
     uint16_t *sub_key;
+
     Node **table;
     Entry *hash_one_entry;
     Node *hash_one_keys;
@@ -96,16 +96,10 @@ void test_tree_insert(void **state)
     *sub_key = 1;
     ll_push(&key_list, sub_key);
 
-    data = ll_copy(key_list, copy_int);
-    assert_true(*(uint16_t *)data->node_data == 1);
-    assert_true(data->next != NULL);
-    assert_true(*(uint16_t *)data->next->node_data == 0);
-    assert_true(data->next->next == NULL);
+    tree_insert(tree, key_list);
+    assert_true(tree->root_node->table->count == 1);
 
-    tree_insert(tree, key_list, data);
-    assert_true(tree->root->table->count == 1);
-
-    table = tree->root->table->table;
+    table = tree->root_node->table->table;
     assert_true(table[0] == NULL);
     assert_true(table[1] != NULL);
     assert_true(table[1]->next == NULL);
@@ -118,6 +112,35 @@ void test_tree_insert(void **state)
     assert_true(*(uint16_t *)stored_key_list->node_data == 1);
     assert_true(stored_key_list->next != NULL);
     assert_true(*((uint16_t*)stored_key_list->next->node_data) == 0);
+
+    key_list = NULL;
+    sub_key = malloc(sizeof(uint16_t));
+    *sub_key = 0;
+    ll_push(&key_list, sub_key);
+    sub_key = malloc(sizeof(uint16_t));
+    *sub_key = 2;
+    ll_push(&key_list, sub_key);
+    tree_insert(tree, key_list);
+
+    key_list = NULL;
+    sub_key = malloc(sizeof(uint16_t));
+    *sub_key = 0;
+    ll_push(&key_list, sub_key);
+    sub_key = malloc(sizeof(uint16_t));
+    *sub_key = 3;
+    ll_push(&key_list, sub_key);
+    tree_insert(tree, key_list);
+
+    /*
+    key_list = NULL;
+    sub_key = malloc(sizeof(uint16_t));
+    *sub_key = 1;
+    ll_push(&key_list, sub_key);
+    sub_key = malloc(sizeof(uint16_t));
+    *sub_key = 3;
+    ll_push(&key_list, sub_key);
+    tree_insert(tree, key_list);
+    */
 
     tree_free(tree);
 }

@@ -18,7 +18,7 @@ Hashtree* tree_create(uint16_t threshold,
         void*(*deep_copy)(void*),
         void(*free_data)(void*));
 
-void tree_insert(Hashtree *tree, Node *key, void* data);
+void tree_insert(Hashtree *tree, Node *key);
 
 void* tree_search(Hashtree *tree, Node *key);
 

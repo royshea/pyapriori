@@ -32,7 +32,7 @@ struct _tree_tree
     void (*free_data) (void*);
 
     /* Root of the hash tree. */
-    TreeNode *root;
+    TreeNode *root_node;
 };
 
 #endif /* HASHTREE_PRIVATE_ */
