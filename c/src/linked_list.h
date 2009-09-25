@@ -35,6 +35,9 @@ void ll_sort(Node **head, int16_t(*compare)(void*, void*));
 /* Search for data in a list and, if found, return its reference. */
 void* ll_search(Node *head, void* data, int16_t(*compare)(void *,void *));
 
+/* Return reference to the nth element in the list (starting with zero). */
+void* ll_get_nth(Node *head, uint8_t index);
+
 /* Search for data in a list and, if found, remove from the list and
  * return its reference. */
 void* ll_remove(Node **head, void* data, int16_t(*compare)(void *,void *));

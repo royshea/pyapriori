@@ -172,6 +172,25 @@ void* ll_search(Node *head, void* data, int16_t(*compare)(void *,void *))
 }
 
 
+void* ll_get_nth(Node *head, uint8_t index)
+{
+    /* Return NULL in case of empty list. */
+    if (head == NULL)
+        return NULL;
+
+    /* Traverse the list to the requested element.  Return NULL if the
+     * end of the list is reached. */
+    for(; index > 0; index--)
+    {
+        if (head->next == NULL)
+            return NULL;
+        head = head->next;
+    }
+
+    return head->data;
+}
+
+
 void* ll_remove(Node **head, void* data, int16_t(*compare)(void *,void *))
 {
     Node *matched_node;

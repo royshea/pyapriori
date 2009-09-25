@@ -288,6 +288,35 @@ void test_ll_search(void **state)
 }
 
 
+void test_ll_get_nth(void **state)
+{
+    int i;
+    int *data;
+    Node *head;
+
+    head = NULL;
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push(&head, data);
+    }
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = ll_get_nth(head, i);
+        assert_true(data != NULL);
+        assert_int_equal(*data, LIMIT - i - 1);
+    }
+    i = LIMIT + 1;
+    data = ll_get_nth(head, i);
+    assert_true(data == NULL);
+
+    ll_free(&head, free_int);
+}
+
+
 void test_ll_remove(void **state)
 {
     int i;
@@ -384,6 +413,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_ll_copy),
         unit_test(test_ll_sort),
         unit_test(test_ll_search),
+        unit_test(test_ll_get_nth),
         unit_test(test_ll_remove),
         unit_test(test_ll_is_subset_of),
     };
