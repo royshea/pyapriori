@@ -4,9 +4,9 @@
 ####
 # Project specific configuration
 ####
-SOURCES = linked_list.c hashtable.c
+SOURCES = linked_list.c hashtable.c hashtree.c
 OBJECTS = $(SOURCES:.c=.o)
-CFLAGS = -g -Wall -pedantic
+CFLAGS = -O0 -g -Wall -pedantic
 
 
 ####
@@ -64,4 +64,6 @@ clean:
 ####
 linked_list.o: linked_list_private.h
 
-hashtable.o: linked_list.c hashtable_private.h
+hashtable.o: linked_list.o hashtable_private.h
+
+hashtree.o: linked_list.o hashtable.o hashtree_private.h

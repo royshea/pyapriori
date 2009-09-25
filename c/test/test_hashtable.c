@@ -161,14 +161,15 @@ void test_ht_free(void **state)
     int i;
 
     ht = ht_create(0, hash_int, copy_int, free_int);
-
     for (i=0; i<LIMIT; i++)
     {
         data = malloc(sizeof(int));
         *data = i;
         ht_insert(ht, i, data);
     }
+    ht_free(ht);
 
+    ht = ht_create(0, hash_int, copy_int, free_int);
     ht_free(ht);
 }
 

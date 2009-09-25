@@ -137,14 +137,19 @@ void* ht_remove(Hashtable *ht, uint16_t key)
 
 void ht_free(Hashtable *ht)
 {
+    Hashtable *prior;
     uint8_t i;
 
+    /* WARNING: Must wrap use of free_entry wuth the setting of
+     * current_ht.  See free_entry for more details.
+     */
+    prior = current_ht;
     current_ht = ht;
     for (i=0; i<ht->size; i++)
     {
         ll_free(&(ht->table[i]), free_entry);
     }
-    current_ht = NULL;
+    current_ht = prior;
 
     free(ht->table);
     free(ht);

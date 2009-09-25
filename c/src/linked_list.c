@@ -79,11 +79,16 @@ void* ll_copy(Node *head, void*(*deep_copy)(void*))
 
 void ll_free(Node **head, void(*free_data)(void*))
 {
+    void *data;
+
     if (*head == NULL)
         return;
 
     while (*head != NULL)
-        free_data(ll_pop(head));
+    {
+        data = ll_pop(head);
+        free_data(data);
+    }
 
     return;
 }
