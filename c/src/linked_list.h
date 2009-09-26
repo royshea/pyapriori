@@ -3,47 +3,45 @@
 
 #include <stdint.h>
 
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-
 /* Abstract linked list node. */
-typedef struct _ll_node Node;
+typedef struct _ll_list List;
+
+/* Create a new list. */
+List* ll_create(int16_t(*compare)(void *,void *),
+        void*(*deep_copy) (void*), void(*free_data) (void*));
 
 /* Add element data to the head of the linked list. */
-void ll_push(Node **head, void *data);
+void ll_push(List *list, void *data);
+
+/* Add element data to the tail of the linked list. */
+void ll_push_tail(List *list, void *data);
 
 /* Pop an element from the head of the linked list. */
-void* ll_pop(Node **head);
+void* ll_pop(List *list);
 
 /* Count the number of nodes in a linked list. */
-uint16_t ll_length(Node *head);
+uint16_t ll_length(List *list);
 
 /* Create a (deep) copy of the linked list. */
-void* ll_copy(Node *head, void*(*deep_copy)(void*));
+void* ll_copy(List *list);
 
 /* Free the linked list. */
-void ll_free(Node **head, void(*free_data)(void*));
+void ll_free(List *list);
 
 /* Sort a linked list using the comparison function defined by compare. */
-void ll_sort(Node **head, int16_t(*compare)(void*, void*));
+void ll_sort(List *list);
 
 /* Search for data in a list and, if found, return its reference. */
-void* ll_search(Node *head, void* data, int16_t(*compare)(void *,void *));
+void* ll_search(List *list, void* data);
 
 /* Return reference to the nth element in the list (starting with zero). */
-void* ll_get_nth(Node *head, uint8_t index);
+void* ll_get_nth(List *list, uint8_t index);
 
 /* Search for data in a list and, if found, remove from the list and
  * return its reference. */
-void* ll_remove(Node **head, void* data, int16_t(*compare)(void *,void *));
+void* ll_remove(List *list, void* data);
 
 /* Check if subset is contained within the list head. */
-uint8_t ll_is_subset_of(Node *head, Node *subset,
-        int16_t(*compare)(void *,void *));
+uint8_t ll_is_subset_of(List *list, List *subset);
 
 #endif /*LINKED_LIST_*/

@@ -5,6 +5,7 @@
 #include <google/cmockery.h>
 
 #include "linked_list.h"
+#include "linked_list_private.h"
 #include "unit_testing.h"
 
 #define LIMIT 5
@@ -38,119 +39,137 @@ int16_t compare_int(void* int_a, void* int_b)
 void test_ll_free(void **state)
 {
     int i;
-    Node *head;
-    head = NULL;
+    int *data;
+    List *list;
 
-    ll_free(&head, free_int);
-    assert_true(head == NULL);
+    list = ll_create(compare_int, copy_int, free_int);
+    ll_free(list);
 
+    list = ll_create(compare_int, copy_int, free_int);
     for (i=0; i<LIMIT; i++)
     {
-        int *data;
         data = malloc(sizeof(int));
         *data = i;
-        ll_push(&head, data);
+        ll_push(list, data);
     }
-
-    ll_free(&head, free_int);
-    assert_true(head == NULL);
+    ll_free(list);
 }
 
 
 void test_ll_pop(void **state)
 {
     int i;
-    Node *head;
+    int *data;
+    List *list;
 
-    head = NULL;
-    expect_assert_failure(ll_pop(&head));
+    list = ll_create(compare_int, copy_int, free_int);
+    assert_true(ll_pop(list) == NULL);
 
     for (i=0; i<LIMIT; i++)
     {
-        int *data;
         data = malloc(sizeof(int));
         *data = i;
-        ll_push(&head, data);
+        ll_push(list, data);
     }
 
     for (i=LIMIT-1; i>=0; i--)
     {
-        int *data;
-        data = ll_pop(&head);
+        data = ll_pop(list);
         assert_int_equal(*data, i);
         free(data);
     }
 
-    expect_assert_failure(ll_pop(&head));
+    assert_true(ll_pop(list) == NULL);
+    ll_free(list);
 }
 
 
 void test_ll_push(void **state)
 {
     int i;
-    Node *head;
+    int *data;
+    List *list;
 
-    head = NULL;
+    list = ll_create(compare_int, copy_int, free_int);
 
     for (i=0; i<LIMIT; i++)
     {
-        int *data;
         data = malloc(sizeof(int));
         *data = i;
-        ll_push(&head, data);
-        assert_true(head != NULL);
+        ll_push(list, data);
+        assert_int_equal(*(int *)list->head->node_data, i);
     }
 
-    ll_free(&head, free_int);
+    ll_free(list);
+}
+
+
+void test_ll_push_tail(void **state)
+{
+    int i;
+    int *data;
+    List *list;
+
+    list = ll_create(compare_int, copy_int, free_int);
+
+    for (i=0; i<LIMIT; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = i;
+        ll_push_tail(list, data);
+        assert_int_equal(*(int *)list->head->node_data, 0);
+    }
+
+    ll_free(list);
 }
 
 
 void test_ll_length(void **state)
 {
     int i;
-    Node *head;
+    int *data;
+    List *list;
 
-    head = NULL;
+    list = ll_create(compare_int, copy_int, free_int);
 
     for (i=0; i<LIMIT; i++)
     {
-        int *data;
-        assert_int_equal(ll_length(head), i);
+        assert_int_equal(ll_length(list), i);
         data = malloc(sizeof(int));
         *data = i;
-        ll_push(&head, data);
-        assert_int_equal(ll_length(head), i+1);
+        ll_push(list, data);
+        assert_int_equal(ll_length(list), i+1);
     }
 
-    ll_free(&head, free_int);
+    ll_free(list);
 }
 
 
 void test_ll_copy(void **state)
 {
     int i;
-    Node *head;
-    Node *copy;
+    int *data;
+    List *list;
+    List *copy;
 
-    head = NULL;
+    list = ll_create(compare_int, copy_int, free_int);
 
     for (i=0; i<LIMIT; i++)
     {
-        int *data;
         data = malloc(sizeof(int));
         *data = i;
-        ll_push(&head, data);
+        ll_push(list, data);
     }
 
-    copy = ll_copy(head, copy_int);
+    copy = ll_copy(list);
 
     for (i=LIMIT-1; i>=0; i--)
     {
         int *data_a;
         int *data_b;
 
-        data_a = ll_pop(&head);
-        data_b = ll_pop(&copy);
+        data_a = ll_pop(list);
+        data_b = ll_pop(copy);
 
         assert_int_equal(*data_a, *data_b);
 
@@ -158,104 +177,156 @@ void test_ll_copy(void **state)
         free(data_b);
     }
 
-    expect_assert_failure(ll_pop(&head));
-    expect_assert_failure(ll_pop(&copy));
+    assert_true(ll_pop(list) == NULL);
+    assert_true(ll_pop(copy) == NULL);
+
+    ll_free(list);
+    ll_free(copy);
+}
+
+
+void test_merge_sorted(void **state)
+{
+    int *data;
+    int* old;
+    int* new;
+
+    List *list_a;
+    List *list_b;
+    List *merged;
+
+    list_a = ll_create(compare_int, copy_int, free_int);
+    data = malloc(sizeof(int));
+    *data = 4;
+    ll_push(list_a, data);
+    data = malloc(sizeof(int));
+    *data = 2;
+    ll_push(list_a, data);
+    data = malloc(sizeof(int));
+    *data = 0;
+    ll_push(list_a, data);
+
+    list_b = ll_create(compare_int, copy_int, free_int);
+    data = malloc(sizeof(int));
+    *data = 3;
+    ll_push(list_b, data);
+    data = malloc(sizeof(int));
+    *data = 1;
+    ll_push(list_b, data);
+
+    merged = merge_sorted(list_a, list_b);
+
+    new = ll_pop(merged);
+    while(new != NULL)
+    {
+        old = new;
+        new = ll_pop(merged);
+        assert_true(new == NULL || *new >= *old);
+        free(old);
+    }
+
+    ll_free(merged);
 }
 
 
 void test_ll_sort(void **state)
 {
-    Node *head;
     int *data;
-
     int* old;
     int* new;
 
-    head = NULL;
+    List *list;
 
-    ll_sort(&head, compare_int);
-    assert_true(head == NULL);
+    list = ll_create(compare_int, copy_int, free_int);
+
+    ll_sort(list);
+    assert_true(list->head == NULL);
 
     /* In order list */
     data = malloc(sizeof(int));
     *data = 0;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 1;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 2;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 3;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 4;
-    ll_push(&head, data);
-    ll_sort(&head, compare_int);
-    old = ll_pop(&head);
-    while(head != NULL)
+    ll_push(list, data);
+
+    ll_sort(list);
+
+    new = ll_pop(list);
+    while(new != NULL)
     {
-        new = ll_pop(&head);
-        assert_true(*new >= *old);
-        free(old);
         old = new;
+        new = ll_pop(list);
+        assert_true(new == NULL || *new >= *old);
+        free(old);
     }
-    free(old);
 
     /* Revese order list */
     data = malloc(sizeof(int));
     *data = 4;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 3;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 2;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 1;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 0;
-    ll_push(&head, data);
-    ll_sort(&head, compare_int);
-    old = ll_pop(&head);
-    while(head != NULL)
+    ll_push(list, data);
+
+    ll_sort(list);
+
+    new = ll_pop(list);
+    while(new != NULL)
     {
-        new = ll_pop(&head);
-        assert_true(*new >= *old);
-        free(old);
         old = new;
+        new = ll_pop(list);
+        assert_true(new == NULL || *new >= *old);
+        free(old);
     }
-    free(old);
 
     /* Mixed order list */
     data = malloc(sizeof(int));
     *data = 3;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 4;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 1;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 2;
-    ll_push(&head, data);
+    ll_push(list, data);
     data = malloc(sizeof(int));
     *data = 0;
-    ll_push(&head, data);
-    ll_sort(&head, compare_int);
-    old = ll_pop(&head);
-    while(head != NULL)
+    ll_push(list, data);
+
+    ll_sort(list);
+
+    new = ll_pop(list);
+    while(new != NULL)
     {
-        new = ll_pop(&head);
-        assert_true(*new >= *old);
-        free(old);
         old = new;
+        new = ll_pop(list);
+        assert_true(new == NULL || *new >= *old);
+        free(old);
     }
-    free(old);
+
+    free(list);
 }
 
 
@@ -263,28 +334,28 @@ void test_ll_search(void **state)
 {
     int i;
     int *data;
-    Node *head;
+    List *list;
 
-    head = NULL;
+    list = ll_create(compare_int, copy_int, free_int);
 
     for (i=0; i<LIMIT; i++)
     {
         data = malloc(sizeof(int));
         *data = i;
-        ll_push(&head, data);
+        ll_push(list, data);
     }
 
     for (i=0; i<LIMIT; i++)
     {
-        data = ll_search(head, &i, compare_int);
+        data = ll_search(list, &i);
         assert_true(data != NULL);
         assert_int_equal(*data, i);
     }
     i = LIMIT + 1;
-    data = ll_search(head, &i, compare_int);
+    data = ll_search(list, &i);
     assert_true(data == NULL);
 
-    ll_free(&head, free_int);
+    ll_free(list);
 }
 
 
@@ -292,28 +363,28 @@ void test_ll_get_nth(void **state)
 {
     int i;
     int *data;
-    Node *head;
+    List *list;
 
-    head = NULL;
+    list = ll_create(compare_int, copy_int, free_int);
 
     for (i=0; i<LIMIT; i++)
     {
         data = malloc(sizeof(int));
         *data = i;
-        ll_push(&head, data);
+        ll_push(list, data);
     }
 
     for (i=0; i<LIMIT; i++)
     {
-        data = ll_get_nth(head, i);
+        data = ll_get_nth(list, i);
         assert_true(data != NULL);
         assert_int_equal(*data, LIMIT - i - 1);
     }
     i = LIMIT + 1;
-    data = ll_get_nth(head, i);
+    data = ll_get_nth(list, i);
     assert_true(data == NULL);
 
-    ll_free(&head, free_int);
+    ll_free(list);
 }
 
 
@@ -321,28 +392,28 @@ void test_ll_remove(void **state)
 {
     int i;
     int *data;
-    Node *head;
+    List *list;
 
-    head = NULL;
+    list = ll_create(compare_int, copy_int, free_int);
 
     for (i=0; i<LIMIT; i++)
     {
         data = malloc(sizeof(int));
         *data = i;
-        ll_push(&head, data);
+        ll_push(list, data);
     }
 
     for (i=0; i<LIMIT; i++)
     {
-        data = ll_remove(&head, &i, compare_int);
+        data = ll_remove(list, &i);
         assert_true(data != NULL);
         assert_int_equal(*data, i);
         free(data);
-        data = ll_remove(&head, &i, compare_int);
+        data = ll_remove(list, &i);
         assert_true(data == NULL);
     }
 
-    ll_free(&head, free_int);
+    ll_free(list);
 }
 
 
@@ -350,57 +421,60 @@ void test_ll_is_subset_of(void **state)
 {
     int i;
     int *data;
-    Node *head;
-    Node *subset;
+    List *list;
+    List *subset;
 
-    head = NULL;
-    for (i=0; i<5; i++)
+    list = ll_create(compare_int, copy_int, free_int);
+
+    for (i=0; i<LIMIT; i++)
     {
         data = malloc(sizeof(int));
         *data = i;
-        ll_push(&head, data);
+        ll_push(list, data);
     }
 
-    subset = NULL;
-    assert_true(ll_is_subset_of(head, subset, compare_int));
+
+    subset = ll_create(compare_int, copy_int, free_int);
+
+    assert_true(ll_is_subset_of(list, subset));
 
     data = malloc(sizeof(int));
     *data = 4;
-    ll_push(&subset, data);
-    assert_true(ll_is_subset_of(head, subset, compare_int));
+    ll_push(subset, data);
+    assert_true(ll_is_subset_of(list, subset));
 
     data = malloc(sizeof(int));
     *data = 2;
-    ll_push(&subset, data);
-    assert_true(ll_is_subset_of(head, subset, compare_int));
+    ll_push(subset, data);
+    assert_true(ll_is_subset_of(list, subset));
 
     data = malloc(sizeof(int));
     *data = 6;
-    ll_push(&subset, data);
-    assert_false(ll_is_subset_of(head, subset, compare_int));
+    ll_push(subset, data);
+    assert_false(ll_is_subset_of(list, subset));
 
     data = malloc(sizeof(int));
     *data = 0;
-    ll_push(&subset, data);
-    assert_false(ll_is_subset_of(head, subset, compare_int));
+    ll_push(subset, data);
+    assert_false(ll_is_subset_of(list, subset));
 
-    data = ll_pop(&subset);
+    data = ll_pop(subset);
     free(data);
-    data = ll_pop(&subset);
+    data = ll_pop(subset);
     free(data);
 
     data = malloc(sizeof(int));
     *data = 0;
-    ll_push(&subset, data);
-    assert_true(ll_is_subset_of(head, subset, compare_int));
+    ll_push(subset, data);
+    assert_true(ll_is_subset_of(list, subset));
 
     data = malloc(sizeof(int));
     *data = 4;
-    ll_push(&subset, data);
-    assert_true(ll_is_subset_of(head, subset, compare_int));
+    ll_push(subset, data);
+    assert_true(ll_is_subset_of(list, subset));
 
-    ll_free(&subset, free_int);
-    ll_free(&head, free_int);
+    ll_free(subset);
+    ll_free(list);
 }
 
 
@@ -409,8 +483,10 @@ int main(int argc, char* argv[]) {
         unit_test(test_ll_free),
         unit_test(test_ll_pop),
         unit_test(test_ll_push),
+        unit_test(test_ll_push_tail),
         unit_test(test_ll_length),
         unit_test(test_ll_copy),
+        unit_test(test_merge_sorted),
         unit_test(test_ll_sort),
         unit_test(test_ll_search),
         unit_test(test_ll_get_nth),
