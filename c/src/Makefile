@@ -5,7 +5,7 @@
 # Project specific configuration
 ####
 #SOURCES = linked_list.c hashtable.c hashtree.c
-SOURCES = linked_list.c
+SOURCES = linked_list.c hashtable.c
 OBJECTS = $(SOURCES:.c=.o)
 CFLAGS = -O0 -g -Wall -pedantic
 

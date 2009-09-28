@@ -16,14 +16,6 @@ static const uint16_t prime_table_size[] =
 static const uint8_t prime_count =
         sizeof(prime_table_size) / sizeof(prime_table_size[0]);
 
-
-typedef struct _ht_entry
-{
-    uint16_t key;
-    void *entry_data;
-} Entry;
-
-
 struct _ht_table
 {
     /* Basic table statistics. */
@@ -31,13 +23,26 @@ struct _ht_table
     uint16_t count;
 
     /* Type specific functions used by table. */
-    uint16_t (*hash_function) (uint16_t);
-    void* (*deep_copy) (void*);
-    void (*free_data) (void*);
+    uint16_t (*hash_function) (void *);
+    int16_t(*key_compare)(void *,void *);
+    void*(*key_copy)(void *);
+    void(*key_free)(void *);
+    int16_t(*data_compare)(void *,void *);
+    void*(*data_copy)(void *);
+    void(*data_free)(void *);
 
-    /* Array of linked lists making up the table data. */
-    Node **table;
+    /* Array of linked lists storing table data. */
+    List** buckets;
 
 };
+
+typedef struct _ht_entry
+{
+    void *key;
+    void *entry_data;
+    struct _ht_table *parent_table;
+} Entry;
+
+
 
 #endif /* HASHTABLE_PRIVATE_ */
