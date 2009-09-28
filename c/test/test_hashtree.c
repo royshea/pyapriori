@@ -29,8 +29,8 @@ uint16_t uint16_list_hash(void *key)
 
     key_list = (List *)key;
 
-    /* XOR hashes of individual keys together to generate a single hash
-     * for a list of keys.
+    /* XOR and shift hashes of individual keys together to generate a
+     * single hash for a list of keys.
      *
      * TODO: XOR is not a great way to combine hashes, but it works for
      * now.
@@ -41,6 +41,7 @@ uint16_t uint16_list_hash(void *key)
     {
         data = ll_get_nth(key_list, i);
         hash ^= uint16_hash(data);
+        hash <<= 1;
     }
 
     return hash;
@@ -170,6 +171,51 @@ void test_tree_insert(void **state)
     expect_assert_failure(tree_insert(tree, key_list, count));
     ll_free(key_list);
     uint16_free(count);
+
+    /* Insert the key 1 1 3 */
+    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
+    key = malloc(sizeof(uint16_t));
+    *key = 1;
+    ll_push_tail(key_list, key);
+    key = malloc(sizeof(uint16_t));
+    *key = 1;
+    ll_push_tail(key_list, key);
+    key = malloc(sizeof(uint16_t));
+    *key = 3;
+    ll_push_tail(key_list, key);
+    count = malloc(sizeof(uint16_t));
+    *count = 1;
+    tree_insert(tree, key_list, count);
+
+    /* Insert the key 1 1 1 */
+    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
+    key = malloc(sizeof(uint16_t));
+    *key = 1;
+    ll_push_tail(key_list, key);
+    key = malloc(sizeof(uint16_t));
+    *key = 1;
+    ll_push_tail(key_list, key);
+    key = malloc(sizeof(uint16_t));
+    *key = 1;
+    ll_push_tail(key_list, key);
+    count = malloc(sizeof(uint16_t));
+    *count = 1;
+    tree_insert(tree, key_list, count);
+
+    /* Insert the key 3 1 1 resulting in expansion of the root node. */
+    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
+    key = malloc(sizeof(uint16_t));
+    *key = 3;
+    ll_push_tail(key_list, key);
+    key = malloc(sizeof(uint16_t));
+    *key = 1;
+    ll_push_tail(key_list, key);
+    key = malloc(sizeof(uint16_t));
+    *key = 1;
+    ll_push_tail(key_list, key);
+    count = malloc(sizeof(uint16_t));
+    *count = 1;
+    tree_insert(tree, key_list, count);
 
     /* Clean up. */
     tree_free(tree);
