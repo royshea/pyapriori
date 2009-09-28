@@ -71,6 +71,36 @@ int16_t uint16_compare(void *int_a, void *int_b)
 }
 
 
+/* Create a linked list storing three uint16_t values. */
+List *make_key_list_three(uint16_t a, uint16_t b, uint16_t c)
+{
+
+    List *key_list;
+    uint16_t *key;
+
+    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
+    key = malloc(sizeof(uint16_t));
+    *key = a;
+    ll_push_tail(key_list, key);
+    key = malloc(sizeof(uint16_t));
+    *key = b;
+    ll_push_tail(key_list, key);
+    key = malloc(sizeof(uint16_t));
+    *key = c;
+
+    ll_push_tail(key_list, key);
+    return key_list;
+}
+
+/* Allocate and initialize an uint16_t. */
+uint16_t *make_count(uint16_t start_val)
+{
+    uint16_t *count;
+    count = malloc(sizeof(uint16_t));
+    *count = start_val;
+    return count;
+}
+
 /* Tests! */
 
 void test_tree_create(void **state)
@@ -101,8 +131,7 @@ void test_tree_insert(void **state)
 {
     Hashtree *tree;
     List *key_list;
-    uint16_t *key;
-    uint16_t *count;
+    uint16_t *tmp_count;
 
     tree = NULL;
     tree = tree_create(5, uint16_hash, uint16_list_hash,
@@ -111,180 +140,130 @@ void test_tree_insert(void **state)
     assert_true(tree != NULL);
 
     /* Insert the key 0 1 2 */
-    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
-    key = malloc(sizeof(uint16_t));
-    *key = 0;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 2;
-    ll_push_tail(key_list, key);
-    count = malloc(sizeof(uint16_t));
-    *count = 1;
-    tree_insert(tree, key_list, count);
+    key_list = make_key_list_three(0, 1, 2);
+    tree_insert(tree, key_list, make_count(1));
 
     /* Insert the key 1 2 3 */
-    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 2;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 3;
-    ll_push_tail(key_list, key);
-    count = malloc(sizeof(uint16_t));
-    *count = 1;
-    tree_insert(tree, key_list, count);
+    key_list = make_key_list_three(1, 2, 3);
+    tree_insert(tree, key_list, make_count(1));
 
     /* Insert the key 0 1 3 */
-    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
-    key = malloc(sizeof(uint16_t));
-    *key = 0;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 3;
-    ll_push_tail(key_list, key);
-    count = malloc(sizeof(uint16_t));
-    *count = 1;
-    tree_insert(tree, key_list, count);
+    key_list = make_key_list_three(0, 1, 3);
+    tree_insert(tree, key_list, make_count(1));
 
     /* Insert the duplicate key 0 1 3 */
-    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
-    key = malloc(sizeof(uint16_t));
-    *key = 0;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 3;
-    ll_push_tail(key_list, key);
-    count = malloc(sizeof(uint16_t));
-    *count = 1;
-    expect_assert_failure(tree_insert(tree, key_list, count));
+    key_list = make_key_list_three(0, 1, 3);
+    tmp_count = make_count(1);
+    expect_assert_failure(tree_insert(tree, key_list, tmp_count));
+    uint16_free(tmp_count);
     ll_free(key_list);
-    uint16_free(count);
 
     /* Insert the key 1 1 3 */
-    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 3;
-    ll_push_tail(key_list, key);
-    count = malloc(sizeof(uint16_t));
-    *count = 1;
-    tree_insert(tree, key_list, count);
+    key_list = make_key_list_three(1, 1, 3);
+    tree_insert(tree, key_list, make_count(1));
 
     /* Insert the key 1 1 1 */
-    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    count = malloc(sizeof(uint16_t));
-    *count = 1;
-    tree_insert(tree, key_list, count);
+    key_list = make_key_list_three(1, 1, 1);
+    tree_insert(tree, key_list, make_count(1));
 
     /* Insert the key 3 1 1 resulting in expansion of the root node. */
-    key_list = ll_create(uint16_compare, uint16_copy, uint16_free);
-    key = malloc(sizeof(uint16_t));
-    *key = 3;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    key = malloc(sizeof(uint16_t));
-    *key = 1;
-    ll_push_tail(key_list, key);
-    count = malloc(sizeof(uint16_t));
-    *count = 1;
-    tree_insert(tree, key_list, count);
+    key_list = make_key_list_three(3, 1, 1);
+    tree_insert(tree, key_list, make_count(1));
 
     /* Clean up. */
     tree_free(tree);
-
-    /*
-    uint16_t *sub_key;
-    Node **table;
-    Entry *hash_one_entry;
-    Node *hash_one_keys;
-    Node *stored_key_list;
-    */
-
-    /*
-    tree_insert(tree, key_list);
-    assert_true(tree->root_node->table->count == 1);
-
-    table = tree->root_node->table->table;
-    assert_true(table[0] == NULL);
-    assert_true(table[1] != NULL);
-    assert_true(table[1]->next == NULL);
-    assert_true(table[2] == NULL);
-    assert_true(table[3] == NULL);
-
-    hash_one_keys = table[1];
-    hash_one_entry = hash_one_keys->node_data;
-    stored_key_list = hash_one_entry->entry_data;
-    assert_true(*(uint16_t *)stored_key_list->node_data == 1);
-    assert_true(stored_key_list->next != NULL);
-    assert_true(*((uint16_t*)stored_key_list->next->node_data) == 0);
-
-    key_list = NULL;
-    sub_key = malloc(sizeof(uint16_t));
-    *sub_key = 0;
-    ll_push(&key_list, sub_key);
-    sub_key = malloc(sizeof(uint16_t));
-    *sub_key = 2;
-    ll_push(&key_list, sub_key);
-    tree_insert(tree, key_list);
-
-    key_list = NULL;
-    sub_key = malloc(sizeof(uint16_t));
-    *sub_key = 0;
-    ll_push(&key_list, sub_key);
-    sub_key = malloc(sizeof(uint16_t));
-    *sub_key = 3;
-    ll_push(&key_list, sub_key);
-    tree_insert(tree, key_list);
-    */
-
-    /*
-    key_list = NULL;
-    sub_key = malloc(sizeof(uint16_t));
-    *sub_key = 1;
-    ll_push(&key_list, sub_key);
-    sub_key = malloc(sizeof(uint16_t));
-    *sub_key = 3;
-    ll_push(&key_list, sub_key);
-    tree_insert(tree, key_list);
-    */
-
 }
 
 
 void test_tree_search(void **state)
-{}
+{
+    Hashtree *tree;
+    List *key_list;
+    List *query_list;
+    uint16_t *data;
+
+    tree = NULL;
+    tree = tree_create(5, uint16_hash, uint16_list_hash,
+            uint16_compare, uint16_copy, uint16_free,
+            uint16_compare, uint16_copy, uint16_free);
+
+    /* Populate the hash tree. */
+    key_list = make_key_list_three(0, 1, 2);
+    tree_insert(tree, key_list, make_count(1));
+
+    key_list = make_key_list_three(1, 2, 3);
+    tree_insert(tree, key_list, make_count(1));
+
+    key_list = make_key_list_three(0, 1, 3);
+    tree_insert(tree, key_list, make_count(1));
+
+    key_list = make_key_list_three(1, 1, 3);
+    tree_insert(tree, key_list, make_count(1));
+
+    key_list = make_key_list_three(1, 1, 1);
+    tree_insert(tree, key_list, make_count(1));
+
+    key_list = make_key_list_three(3, 1, 1);
+    tree_insert(tree, key_list, make_count(1));
+
+
+    /* Search for inserted values. */
+    query_list = make_key_list_three(0, 1, 2);
+    data = tree_search(tree, query_list);
+    assert_true(data != NULL);
+    assert_int_equal(*data, 1);
+    ll_free(query_list);
+
+    query_list = make_key_list_three(1, 2, 3);
+    assert_true(tree_search(tree, query_list) != NULL);
+    ll_free(query_list);
+
+    query_list = make_key_list_three(0, 1, 3);
+    assert_true(tree_search(tree, query_list) != NULL);
+    ll_free(query_list);
+
+    query_list = make_key_list_three(1, 1, 3);
+    assert_true(tree_search(tree, query_list) != NULL);
+    ll_free(query_list);
+
+    query_list = make_key_list_three(1, 1, 1);
+    assert_true(tree_search(tree, query_list) != NULL);
+    ll_free(query_list);
+
+    query_list = make_key_list_three(9, 9, 9);
+    assert_true(tree_search(tree, query_list) == NULL);
+    ll_free(query_list);
+
+    /* Clean up. */
+    tree_free(tree);
+}
 
 
 void test_tree_free(void **state)
-{}
+{
+    Hashtree *tree;
+    List *key_list;
+
+    /* Populate tree. */
+    tree = tree_create(5, uint16_hash, uint16_list_hash,
+            uint16_compare, uint16_copy, uint16_free,
+            uint16_compare, uint16_copy, uint16_free);
+    key_list = make_key_list_three(0, 1, 2);
+    tree_insert(tree, key_list, make_count(1));
+    key_list = make_key_list_three(1, 2, 3);
+    tree_insert(tree, key_list, make_count(1));
+    key_list = make_key_list_three(0, 1, 3);
+    tree_insert(tree, key_list, make_count(1));
+    key_list = make_key_list_three(1, 1, 3);
+    tree_insert(tree, key_list, make_count(1));
+    key_list = make_key_list_three(1, 1, 1);
+    tree_insert(tree, key_list, make_count(1));
+    key_list = make_key_list_three(3, 1, 1);
+    tree_insert(tree, key_list, make_count(1));
+
+    /* Free the tree. */
+    tree_free(tree);
+}
 
 
 int main(int argc, char* argv[]) {

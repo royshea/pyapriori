@@ -2,12 +2,29 @@
 #include <assert.h>
 
 #include "hashtree_private.h"
+
+/* TODO: See other TODOs within this program on advice about removing
+ * these includes. */
 #include "linked_list_private.h"
+#include "hashtable_private.h"
 
 #ifdef UNIT_TESTING
 #include "../test/unit_testing.h"
 #endif /* UNIT_TESTING */
 
+
+static void tree_node_free(void *data)
+{
+    TreeNode *node;
+    Hashtree *ht;
+
+    node = (TreeNode *)data;
+    ht = node->parent_tree;
+    ht->key_free(node->key);
+    ht_free(node->table);
+    free(node);
+    return;
+}
 
 static inline void *get_nth_key(List* key_list, uint8_t index)
 {
@@ -15,14 +32,14 @@ static inline void *get_nth_key(List* key_list, uint8_t index)
 }
 
 
-void key_list_free(void *data)
+static void key_list_free(void *data)
 {
     List *list;
     list = (List *)data;
     ll_free(list);
 }
 
-int16_t key_list_compare(void *data_a, void *data_b)
+static int16_t key_list_compare(void *data_a, void *data_b)
 {
     uint16_t i;
     List *list_a;
@@ -43,6 +60,10 @@ int16_t key_list_compare(void *data_a, void *data_b)
     {
         key_a = ll_get_nth(list_a, i);
         key_b = ll_get_nth(list_b, i);
+
+        /* TODO: Acessor function to the compare operator?  That way we
+         * don't require internal linked list structure information.
+         * Although I'm not sure if that would work correctly... */
         cmp = list_a->compare(key_a, key_b);
         if (cmp != 0) return cmp;
     }
@@ -69,9 +90,10 @@ void *key_list_copy(void *data)
  * located on a PC or embedded device.
  */
 static TreeNode* create_tree_leaf_node(Hashtree *ht, TreeNode
-        *parent_node, List *key_list)
+        *parent_node, List *key)
 {
     TreeNode *tn;
+    void *key_copy;
 
     tn = malloc(sizeof(TreeNode));
     assert(tn != NULL);
@@ -90,9 +112,11 @@ static TreeNode* create_tree_leaf_node(Hashtree *ht, TreeNode
     {
         /* Non-root leaf nodes. */
         tn->depth = parent_node->depth + 1;
-        tn->key = get_nth_key(key_list, tn->depth);
+        key_copy = ht->key_copy(key);
+        tn->key = key_copy;
     }
 
+    /* Create a hashtable to store key_list / data pairs. */
     tn->table = ht_create(ht->threshold, ht->hash_key_list,
             key_list_compare, key_list_copy, key_list_free,
             ht->data_compare, ht->data_copy, ht->data_free);
@@ -133,11 +157,13 @@ Hashtree* tree_create(uint16_t threshold,
 }
 
 
+
 /* Traverse a key_list looking for the first leaf node. */
 static TreeNode* find_leaf(TreeNode *node, List *key_list)
 {
     void *key;
     TreeNode *next_node;
+    void *key_copy;
 
     /* Stop when a leaf node is found. */
     if (node->type == LEAF)
@@ -159,7 +185,8 @@ static TreeNode* find_leaf(TreeNode *node, List *key_list)
         {
             /* If branch has not been explored then create a new leaf. */
             next_node = create_tree_leaf_node(node->parent_tree, node, key);
-            ht_insert(node->table, key, next_node);
+            key_copy = node->parent_tree->key_copy(key);
+            ht_insert(node->table, key_copy, next_node);
             return next_node;
         }
         else if (next_node->type == LEAF)
@@ -178,41 +205,89 @@ static TreeNode* find_leaf(TreeNode *node, List *key_list)
 }
 
 
-static void expand_node(TreeNode **node)
+static void expand_node(TreeNode *node);
+static void insert_to_leaf(TreeNode *node, List *key_list, void *data)
 {
-    assert(FALSE);
+    TreeNode *leaf;
+    void *old_data;
+
+    /* Locate the leaf that should house key_list. */
+    leaf = find_leaf(node, key_list);
+
+    /* Check if key_list is already present in the hash tree. */
+    old_data = ht_search(leaf->table, key_list);
+    assert(old_data == NULL);
+
+    /* Insert data into the table if key_list is not already
+     * present. */
+    ht_insert(leaf->table, key_list, data);
+    if (ht_num_entries(leaf->table) > leaf->parent_tree->threshold)
+        expand_node(leaf);
+}
+
+
+static void expand_node(TreeNode *node)
+{
+    Hashtable *old_table;
+    Hashtree *ht;
+    uint16_t i;
+    List *bucket;
+    Entry *e;
+
+    ht = node->parent_tree;
+
+    node->type = BODY;
+
+    /* Create a new hash table that maps a single key value down to
+     * a lower level of hash tree nodes. */
+    old_table = node->table;
+
+    /* Create a hashtable to store other TreeNodes.
+     *
+     * TODO: Setting the body hash table size hint to threshold.
+     * Threshold is really being used to control how bushy the leaf
+     * nodes are.  Size of body nodes can be seperate from this. */
+    node->table = ht_create(ht->threshold, ht->hash_key,
+            ht->key_compare, ht->key_copy, ht->key_free,
+            NULL, NULL, tree_node_free);
+
+    /* TODO: Currently requires internal access to the hash table.  It
+     * would be good to create an iterator for the hash table to avoid
+     * this violation of the data type abstraction.
+     */
+    for (i=0; i<old_table->size; i++)
+    {
+        bucket = old_table->buckets[i];
+        if (bucket == NULL)
+            continue;
+
+        /* Rehash each entrty. */
+        for (e = (Entry *)ll_pop(bucket); e != NULL;
+                e = (Entry *)ll_pop(bucket))
+        {
+            insert_to_leaf(node, e->key, e->entry_data);
+            free(e);
+        }
+    }
+
+    ht_free(old_table);
 }
 
 
 void tree_insert(Hashtree *tree, List *key_list, void *data)
 {
-    TreeNode *leaf;
-    void *old_data;
-
-    leaf = find_leaf(tree->root_node, key_list);
-
-    old_data = ht_search(leaf->table, key_list);
-
-    if (old_data == NULL)
-    {
-        ht_insert(leaf->table, key_list, data);
-        if (ht_num_entries(leaf->table) > tree->threshold)
-            expand_node(&leaf);
-    }
-    else
-    {
-        /* TODO: This should be revised to update the data stored in the
-         * hash tree.  For the apriori application, this update should
-         * simply increment old_data. */
-        assert(FALSE);
-    }
+    insert_to_leaf(tree->root_node, key_list, data);
 }
 
 
 void* tree_search(Hashtree *tree, List *key_list)
 {
-    assert(FALSE);
-    return NULL;
+    TreeNode *leaf;
+
+    /* Locate the leaf that should house key_list and look up the
+     * key_list in the leaf. */
+    leaf = find_leaf(tree->root_node, key_list);
+    return ht_search(leaf->table, key_list);
 }
 
 
