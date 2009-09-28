@@ -121,11 +121,7 @@ void ht_insert(Hashtable *ht, void *key, void *data)
     Entry *e;
     uint16_t index;
 
-    /* Forbid duplicate keys.
-     *
-     * NOTE: Will want to update this for the hashtree implementation.
-     * But for now this restriction helps in development debugging.
-     */
+    /* Forbid duplicate keys. */
     assert(ht_search(ht, key) == NULL);
 
     /* Create entry to insert into table. */
