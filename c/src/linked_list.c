@@ -222,6 +222,48 @@ void ll_sort(List *list)
 }
 
 
+/* Traverse two lists comparing pairwise elements.  The first list with
+ * a smaller key element or, should all elements be equal, the shorter
+ * list is considered "less than" in the list ordering. */
+int16_t ll_list_compare(void *list_blob_a, void *list_blob_b)
+{
+    List *list_a;
+    List *list_b;
+    uint16_t length_a;
+    uint16_t length_b;
+    uint16_t i;
+
+    /* Cast to correct data type. */
+    list_a = (List *)list_blob_a;
+    list_b = (List *)list_blob_b;
+
+    /* Number of keys in each list. */
+    length_a = ll_length(list_a);
+    length_b = ll_length(list_b);
+
+    /* Compare pairwise elements of the key lists. */
+    for (i=0; i<length_a && i<length_b; i++)
+    {
+        void *data_a;
+        void *data_b;
+        int16_t cmp;
+
+        data_a = ll_get_nth(list_a, i);
+        data_b = ll_get_nth(list_b, i);
+
+        /* TODO: Acessor function to the compare operator?  That way we
+         * don't require internal linked list structure information.
+         * Although I'm not sure if that would work correctly... */
+        cmp = list_a->data_compare(data_a, data_b);
+        if (cmp != 0) return cmp;
+    }
+
+    return length_a - length_b;
+}
+
+
+
+
 void* ll_search(List *list, void* data)
 {
     Node *current;

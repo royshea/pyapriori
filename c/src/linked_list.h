@@ -31,7 +31,13 @@ void ll_free(List *list);
 /* Sort a linked list using the comparison function defined by compare. */
 void ll_sort(List *list);
 
+/* Compare two linked lists. */
+int16_t ll_list_compare(void *list_blob_a, void *list_blob_b);
+
 /* Search for data in a list and, if found, return its reference. */
+void* ll_search(List *list, void* data);
+
+/* Compare an element from a linked list Search for data in a list and, if found, return its reference. */
 void* ll_search(List *list, void* data);
 
 /* Return reference to the nth element in the list (starting with zero). */

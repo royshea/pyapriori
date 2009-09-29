@@ -34,8 +34,47 @@ int16_t compare_int(void* int_a, void* int_b)
 }
 
 
-/* Linked list testing. */
+/* Utility for making lists. */
+List *make_int_list(int length, ...)
+{
+    List *list;
+    va_list ap;
+    int i;
+    int *data;
 
+    list = ll_create(compare_int, copy_int, free_int);
+    va_start(ap, length);
+    for (i=0; i<length; i++)
+    {
+        data = malloc(sizeof(int));
+        *data = va_arg(ap, int);
+        ll_push_tail(list, data);
+    }
+    va_end(ap);
+    return list;
+}
+
+
+/* Utility for testing that a list is sorted.  Frees the list in the
+ * process. */
+void test_sorted_then_free(List *list)
+{
+    int *new;
+    int *old;
+
+    new = ll_pop(list);
+    while(new != NULL)
+    {
+        old = new;
+        new = ll_pop(list);
+        assert_true(new == NULL || *new >= *old);
+        free(old);
+    }
+    ll_free(list);
+}
+
+
+/* Linked list testing. */
 void test_ll_free(void **state)
 {
     int i;
@@ -187,146 +226,68 @@ void test_ll_copy(void **state)
 
 void test_merge_sorted(void **state)
 {
-    int *data;
-    int* old;
-    int* new;
-
     List *list_a;
     List *list_b;
     List *merged;
 
-    list_a = ll_create(compare_int, copy_int, free_int);
-    data = malloc(sizeof(int));
-    *data = 4;
-    ll_push(list_a, data);
-    data = malloc(sizeof(int));
-    *data = 2;
-    ll_push(list_a, data);
-    data = malloc(sizeof(int));
-    *data = 0;
-    ll_push(list_a, data);
-
-    list_b = ll_create(compare_int, copy_int, free_int);
-    data = malloc(sizeof(int));
-    *data = 3;
-    ll_push(list_b, data);
-    data = malloc(sizeof(int));
-    *data = 1;
-    ll_push(list_b, data);
-
+    list_a = make_int_list(3, 0, 2, 4);
+    list_b = make_int_list(2, 1, 3);
     merged = merge_sorted(list_a, list_b);
-
-    new = ll_pop(merged);
-    while(new != NULL)
-    {
-        old = new;
-        new = ll_pop(merged);
-        assert_true(new == NULL || *new >= *old);
-        free(old);
-    }
-
-    ll_free(merged);
+    test_sorted_then_free(merged);
 }
 
 
 void test_ll_sort(void **state)
 {
-    int *data;
-    int* old;
-    int* new;
-
     List *list;
 
-    list = ll_create(compare_int, copy_int, free_int);
-
+    /* Empty list. */
+    list = make_int_list(0);
     ll_sort(list);
-    assert_true(list->head == NULL);
+    test_sorted_then_free(list);
 
     /* In order list */
-    data = malloc(sizeof(int));
-    *data = 0;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 1;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 2;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 3;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 4;
-    ll_push(list, data);
-
+    list = make_int_list(5, 0, 1, 2, 3, 4);
     ll_sort(list);
-
-    new = ll_pop(list);
-    while(new != NULL)
-    {
-        old = new;
-        new = ll_pop(list);
-        assert_true(new == NULL || *new >= *old);
-        free(old);
-    }
+    test_sorted_then_free(list);
 
     /* Revese order list */
-    data = malloc(sizeof(int));
-    *data = 4;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 3;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 2;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 1;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 0;
-    ll_push(list, data);
-
+    list = make_int_list(5, 4, 3, 2, 1, 0);
     ll_sort(list);
-
-    new = ll_pop(list);
-    while(new != NULL)
-    {
-        old = new;
-        new = ll_pop(list);
-        assert_true(new == NULL || *new >= *old);
-        free(old);
-    }
+    test_sorted_then_free(list);
 
     /* Mixed order list */
-    data = malloc(sizeof(int));
-    *data = 3;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 4;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 1;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 2;
-    ll_push(list, data);
-    data = malloc(sizeof(int));
-    *data = 0;
-    ll_push(list, data);
-
+    list = make_int_list(5, 3, 4, 1, 2, 0);
     ll_sort(list);
+    test_sorted_then_free(list);
 
-    new = ll_pop(list);
-    while(new != NULL)
-    {
-        old = new;
-        new = ll_pop(list);
-        assert_true(new == NULL || *new >= *old);
-        free(old);
-    }
+    /* Repeated elements */
+    list = make_int_list(10, 3, 4, 1, 2, 0, 0, 2, 1, 4, 3);
+    ll_sort(list);
+    test_sorted_then_free(list);
 
-    free(list);
+
+}
+
+
+void test_ll_compare(void **state)
+{
+    List *list_a;
+    List *list_b;
+    List *list_c;
+
+    list_a = make_int_list(5, 0, 1, 2, 3, 5);
+    list_b = make_int_list(4, 0, 1, 2, 3);
+    list_c = make_int_list(5, 0, 1, 2, 1, 4);
+
+    assert_true(ll_list_compare((void *)list_a, (void *)list_a) == 0);
+    assert_true(ll_list_compare((void *)list_a, (void *)list_b) > 0);
+    assert_true(ll_list_compare((void *)list_a, (void *)list_c) > 0);
+    assert_true(ll_list_compare((void *)list_b, (void *)list_c) > 0);
+
+    ll_free(list_a);
+    ll_free(list_b);
+    ll_free(list_c);
 }
 
 
@@ -488,6 +449,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_ll_copy),
         unit_test(test_merge_sorted),
         unit_test(test_ll_sort),
+        unit_test(test_ll_compare),
         unit_test(test_ll_search),
         unit_test(test_ll_get_nth),
         unit_test(test_ll_remove),

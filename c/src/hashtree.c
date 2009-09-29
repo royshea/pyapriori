@@ -5,52 +5,11 @@
 
 /* TODO: See other TODOs within this program on advice about removing
  * these includes. */
-#include "linked_list_private.h"
 #include "hashtable_private.h"
 
 #ifdef UNIT_TESTING
 #include "../test/unit_testing.h"
 #endif /* UNIT_TESTING */
-
-
-static int16_t key_list_compare(void *data_a, void *data_b)
-{
-    uint16_t i;
-    List *key_list_a;
-    List *key_list_b;
-    uint16_t length_a;
-    uint16_t length_b;
-
-    /* Cast to correct data type. */
-    key_list_a = (List *)data_a;
-    key_list_b = (List *)data_b;
-
-    /* Number of keys in each key_list. */
-    length_a = ll_length(key_list_a);
-    length_b = ll_length(key_list_b);
-
-    /* Traverse both key_lists comparing pairwise elements.  The
-     * first list with a smaller key element or, should all elements be
-     * equal, the shorter list is considered "before" in the key_list
-     * ordering. */
-    for (i=0; i<length_a && i<length_b; i++)
-    {
-        void *key_a;
-        void *key_b;
-        int16_t cmp;
-
-        key_a = ll_get_nth(key_list_a, i);
-        key_b = ll_get_nth(key_list_b, i);
-
-        /* TODO: Acessor function to the compare operator?  That way we
-         * don't require internal linked list structure information.
-         * Although I'm not sure if that would work correctly... */
-        cmp = key_list_a->data_compare(key_a, key_b);
-        if (cmp != 0) return cmp;
-    }
-
-    return length_a - length_b;
-}
 
 
 void *key_list_copy(void *data)
@@ -104,7 +63,7 @@ static TreeNode* create_tree_leaf_node(Hashtree *ht, TreeNode
 
     /* Create a hashtable to store key_list / data pairs. */
     tn->table = ht_create(ht->threshold, ht->hash_key_list,
-            key_list_compare, key_list_copy, key_list_free,
+            ll_list_compare, key_list_copy, key_list_free,
             ht->data_compare, ht->data_copy, ht->data_free);
 
     return tn;
