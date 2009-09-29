@@ -32,6 +32,12 @@ void uint16_free(void* int_data)
 }
 
 
+uint16_t uint16_hash(void *key)
+{
+    return *(uint16_t *)key;
+}
+
+
 int16_t uint16_list_compare(void *data_a, void* data_b)
 {
     return ll_list_compare(data_a, data_b);

@@ -5,41 +5,11 @@
 #include <google/cmockery.h>
 
 #include "hashtable.h"
+#include "uint16_list.h"
 
 #include "unit_testing.h"
 
 #define LIMIT 20
-
-
-/* Utility functions used to construct a hash table using integer keys
- * and data. */
-
-uint16_t uint16_hash(void *key)
-{
-    return *(uint16_t *)key;
-}
-
-
-void uint16_free(void* int_data)
-{
-    free(int_data);
-    return;
-}
-
-
-void* uint16_copy(void* int_data)
-{
-    uint16_t *data;
-    data = malloc(sizeof(uint16_t));
-    *data = *(uint16_t *)int_data;
-    return data;
-}
-
-
-int16_t uint16_compare(void *int_a, void *int_b)
-{
-    return *(uint16_t *)int_a - *(uint16_t *)int_b;
-}
 
 
 /* Tests. */
@@ -62,8 +32,6 @@ void test_ht_create(void **state)
 void test_ht_insert(void **state)
 {
     Hashtable *ht;
-    uint16_t *key;
-    int *data;
     int i;
 
     ht = ht_create(0, uint16_hash,
@@ -72,7 +40,10 @@ void test_ht_insert(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        uint16_t *key;
+        uint16_t *data;
+
+        data = malloc(sizeof(uint16_t));
         *data = i;
         key = malloc(sizeof(uint16_t));
         *key = i;
@@ -81,7 +52,10 @@ void test_ht_insert(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        uint16_t *key;
+        uint16_t *data;
+
+        data = malloc(sizeof(uint16_t));
         *data = i;
         key = malloc(sizeof(uint16_t));
         *key = i;
@@ -97,8 +71,6 @@ void test_ht_insert(void **state)
 void test_ht_search(void **state)
 {
     Hashtable *ht;
-    int *data;
-    uint16_t *key;
     int i;
 
     ht = ht_create(0, uint16_hash,
@@ -107,7 +79,10 @@ void test_ht_search(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        uint16_t *key;
+        uint16_t *data;
+
+        data = malloc(sizeof(uint16_t));
         *data = i;
         key = malloc(sizeof(uint16_t));
         *key = i;
@@ -116,13 +91,14 @@ void test_ht_search(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
+        uint16_t *data;
+
         data = ht_search(ht, &i);
         assert_true(data != NULL);
         assert_int_equal(*data, i);
     }
     i = LIMIT + 1;
-    data = ht_search(ht, &i);
-    assert_true(data == NULL);
+    assert_true(ht_search(ht, &i) == NULL);
 
     ht_free(ht);
 }
@@ -131,8 +107,6 @@ void test_ht_search(void **state)
 void test_ht_num_entries(void **state)
 {
     Hashtable *ht;
-    int *data;
-    uint16_t *key;
     int i;
 
     ht = ht_create(0, uint16_hash,
@@ -141,8 +115,11 @@ void test_ht_num_entries(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
+        uint16_t *data;
+        uint16_t *key;
+
         assert_int_equal(ht_num_entries(ht), i);
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(uint16_t));
         *data = i;
         key = malloc(sizeof(uint16_t));
         *key = i;
@@ -157,8 +134,6 @@ void test_ht_num_entries(void **state)
 void test_ht_remove(void **state)
 {
     Hashtable *ht;
-    int *data;
-    uint16_t *key;
     int i;
 
     ht = ht_create(0, uint16_hash,
@@ -167,7 +142,10 @@ void test_ht_remove(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        uint16_t *data;
+        uint16_t *key;
+
+        data = malloc(sizeof(uint16_t));
         *data = i;
         key = malloc(sizeof(uint16_t));
         *key = i;
@@ -176,6 +154,8 @@ void test_ht_remove(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
+        uint16_t *data;
+
         data = ht_remove(ht, &i);
         assert_true(data != NULL);
         assert_int_equal(*data, i);
@@ -191,8 +171,6 @@ void test_ht_remove(void **state)
 void test_ht_free(void **state)
 {
     Hashtable *ht;
-    int *data;
-    uint16_t *key;
     int i;
 
     ht = ht_create(0, uint16_hash,
@@ -201,7 +179,10 @@ void test_ht_free(void **state)
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        uint16_t *data;
+        uint16_t *key;
+
+        data = malloc(sizeof(uint16_t));
         *data = i;
         key = malloc(sizeof(uint16_t));
         *key = i;

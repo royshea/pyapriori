@@ -17,6 +17,9 @@ void* uint16_copy(void* int_data);
 /* Free a uint16_t value. */
 void uint16_free(void* int_data);
 
+/* Trivial hash function for uint16_t data that simply returns the value. */
+uint16_t uint16_hash(void *key);
+
 /* Compare two lists of uint16_t values. This can be used to sort lists
  * of uint16_t lists.*/
 int16_t uint16_list_compare(void *data_a, void* data_b);
