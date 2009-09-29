@@ -3,7 +3,7 @@
 
 #include "hashtree_private.h"
 
-/* TODO: See other TODOs within this program on advice about removing
+/* NOTE: See other NOTEs within this program on advice about removing
  * these includes. */
 #include "hashtable_private.h"
 
@@ -12,16 +12,22 @@
 #endif /* UNIT_TESTING */
 
 
-void *key_list_copy(void *data)
+/* Generic function used to copy key lists.
+ *
+ * TODO: This function has not been tested.
+ */
+static void *key_list_copy(void *data)
 {
     return ll_copy((List *)data);
 }
 
 
+/* Generic function used to free key lists. */
 static void key_list_free(void *data)
 {
     ll_free((List *)data);
 }
+
 
 /* Create a tree leaf node.
  *
@@ -70,6 +76,7 @@ static TreeNode* create_tree_leaf_node(Hashtree *ht, TreeNode
 }
 
 
+/* Basic constructor for the hash tree. */
 Hashtree* tree_create(uint16_t threshold,
         uint16_t(*hash_key)(void *),
         uint16_t(*hash_key_list)(void *),
@@ -102,14 +109,9 @@ Hashtree* tree_create(uint16_t threshold,
 }
 
 
-
 /* Traverse a key_list looking for the first leaf node. */
 static TreeNode* find_leaf(TreeNode *node, List *key_list)
 {
-    void *key;
-    TreeNode *next_node;
-    void *key_copy;
-
     /* Stop when a leaf node is found. */
     if (node->type == LEAF)
         return node;
@@ -117,6 +119,8 @@ static TreeNode* find_leaf(TreeNode *node, List *key_list)
     /* Descend through BODY nodes tree until a LEAF node is found. */
     while (key_list)
     {
+        void *key;
+        TreeNode *next_node;
 
         /* Descend one step deeper into the tree.
          *
@@ -128,6 +132,8 @@ static TreeNode* find_leaf(TreeNode *node, List *key_list)
 
         if (next_node == NULL)
         {
+            void *key_copy;
+
             /* If branch has not been explored then create a new leaf. */
             next_node = create_tree_leaf_node(node->parent_tree, node, key);
             key_copy = node->parent_tree->key_copy(key);
@@ -186,13 +192,13 @@ static void tree_node_free(void *data)
     return;
 }
 
+
+/* Expand a leaf node into a body node. */
 static void expand_node(TreeNode *node)
 {
     Hashtable *old_table;
     Hashtree *ht;
     uint16_t i;
-    List *bucket;
-    Entry *e;
 
     ht = node->parent_tree;
 
@@ -206,22 +212,25 @@ static void expand_node(TreeNode *node)
      *
      * TODO: Setting the body hash table size hint to threshold.
      * Threshold is really being used to control how bushy the leaf
-     * nodes are.  Size of body nodes can be seperate from this. */
+     * nodes are.  Size of body nodes can be separate from this. */
     node->table = ht_create(ht->threshold, ht->hash_key,
             ht->key_compare, ht->key_copy, ht->key_free,
             NULL, NULL, tree_node_free);
 
-    /* TODO: Currently requires internal access to the hash table.  It
+    /* NOTE: Currently requires internal access to the hash table.  It
      * would be good to create an iterator for the hash table to avoid
      * this violation of the data type abstraction.
      */
     for (i=0; i<old_table->size; i++)
     {
+        List *bucket;
+        Entry *e;
+
         bucket = old_table->buckets[i];
         if (bucket == NULL)
             continue;
 
-        /* Rehash each entrty. */
+        /* Rehash each entry. */
         for (e = (Entry *)ll_pop(bucket); e != NULL;
                 e = (Entry *)ll_pop(bucket))
         {
@@ -234,23 +243,27 @@ static void expand_node(TreeNode *node)
 }
 
 
+/* Insert data into the tree using key_list. */
 void tree_insert(Hashtree *tree, List *key_list, void *data)
 {
     insert_to_leaf(tree->root_node, key_list, data);
 }
 
 
+/* Search the tree for data referenced by key_list. */
 void* tree_search(Hashtree *tree, List *key_list)
 {
     TreeNode *leaf;
 
-    /* Locate the leaf that should house key_list and look up the
+    /* Locate the leaf that should house key_list and then look up the
      * key_list in the leaf. */
     leaf = find_leaf(tree->root_node, key_list);
+    assert(leaf != NULL);
     return ht_search(leaf->table, key_list);
 }
 
 
+/* Free the hash tree. */
 void tree_free(Hashtree *tree)
 {
     ht_free(tree->root_node->table);
