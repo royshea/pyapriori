@@ -13,58 +13,39 @@
 #endif /* UNIT_TESTING */
 
 
-static void tree_node_free(void *data)
-{
-    TreeNode *node;
-    Hashtree *ht;
-
-    node = (TreeNode *)data;
-    ht = node->parent_tree;
-    ht->key_free(node->key);
-    ht_free(node->table);
-    free(node);
-    return;
-}
-
-static inline void *get_nth_key(List* key_list, uint8_t index)
-{
-    return ll_get_nth(key_list, index);
-}
-
-
-static void key_list_free(void *data)
-{
-    List *list;
-    list = (List *)data;
-    ll_free(list);
-}
-
 static int16_t key_list_compare(void *data_a, void *data_b)
 {
     uint16_t i;
-    List *list_a;
-    List *list_b;
+    List *key_list_a;
+    List *key_list_b;
     uint16_t length_a;
     uint16_t length_b;
-    void *key_a;
-    void *key_b;
-    int16_t cmp;
 
-    list_a = (List *)data_a;
-    list_b = (List *)data_b;
+    /* Cast to correct data type. */
+    key_list_a = (List *)data_a;
+    key_list_b = (List *)data_b;
 
-    length_a = ll_length(list_a);
-    length_b = ll_length(list_b);
+    /* Number of keys in each key_list. */
+    length_a = ll_length(key_list_a);
+    length_b = ll_length(key_list_b);
 
+    /* Traverse both key_lists comparing pairwise elements.  The
+     * first list with a smaller key element or, should all elements be
+     * equal, the shorter list is considered "before" in the key_list
+     * ordering. */
     for (i=0; i<length_a && i<length_b; i++)
     {
-        key_a = ll_get_nth(list_a, i);
-        key_b = ll_get_nth(list_b, i);
+        void *key_a;
+        void *key_b;
+        int16_t cmp;
+
+        key_a = ll_get_nth(key_list_a, i);
+        key_b = ll_get_nth(key_list_b, i);
 
         /* TODO: Acessor function to the compare operator?  That way we
          * don't require internal linked list structure information.
          * Although I'm not sure if that would work correctly... */
-        cmp = list_a->compare(key_a, key_b);
+        cmp = key_list_a->data_compare(key_a, key_b);
         if (cmp != 0) return cmp;
     }
 
@@ -74,8 +55,13 @@ static int16_t key_list_compare(void *data_a, void *data_b)
 
 void *key_list_copy(void *data)
 {
-    List *list;
-    return ll_copy(list);
+    return ll_copy((List *)data);
+}
+
+
+static void key_list_free(void *data)
+{
+    ll_free((List *)data);
 }
 
 /* Create a tree leaf node.
@@ -178,7 +164,7 @@ static TreeNode* find_leaf(TreeNode *node, List *key_list)
          * Currently in a BODY node.  Therefore it is keyed using the
          * individual key_list element, key, rather than the entire
          * key_list. */
-        key = get_nth_key(key_list, node->depth);
+        key = ll_get_nth(key_list, node->depth);
         next_node = ht_search(node->table, key);
 
         if (next_node == NULL)
@@ -225,6 +211,21 @@ static void insert_to_leaf(TreeNode *node, List *key_list, void *data)
         expand_node(leaf);
 }
 
+
+/* Function used to free tree body nodes. This function is used by
+ * expand node to define the free function for BODY nodes. */
+static void tree_node_free(void *data)
+{
+    TreeNode *node;
+    Hashtree *ht;
+
+    node = (TreeNode *)data;
+    ht = node->parent_tree;
+    ht->key_free(node->key);
+    ht_free(node->table);
+    free(node);
+    return;
+}
 
 static void expand_node(TreeNode *node)
 {

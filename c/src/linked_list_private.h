@@ -27,9 +27,9 @@ struct _ll_list
     Node *tail;
 
     /* Functions for manipulating list entries. */
-    int16_t (*compare)(void *,void *);
-    void* (*deep_copy) (void*);
-    void (*free_data) (void*);
+    int16_t (*data_compare)(void *,void *);
+    void* (*data_copy) (void*);
+    void (*data_free) (void*);
 };
 
 List* merge_sorted(List *list_a, List *list_b);

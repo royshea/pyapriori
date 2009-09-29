@@ -7,8 +7,8 @@
 typedef struct _ll_list List;
 
 /* Create a new list. */
-List* ll_create(int16_t(*compare)(void *,void *),
-        void*(*deep_copy) (void*), void(*free_data) (void*));
+List* ll_create(int16_t(*data_compare)(void *,void *),
+        void*(*data_copy) (void*), void(*data_data) (void*));
 
 /* Add element data to the head of the linked list. */
 void ll_push(List *list, void *data);

@@ -10,8 +10,8 @@
 
 
 
-List* ll_create(int16_t(*compare)(void *,void *),
-        void*(*deep_copy) (void*), void(*free_data) (void*))
+List* ll_create(int16_t(*data_compare)(void *,void *),
+        void*(*data_copy) (void*), void(*data_free) (void*))
 {
     List *list;
 
@@ -20,9 +20,9 @@ List* ll_create(int16_t(*compare)(void *,void *),
 
     list->head = NULL;
     list->tail = NULL;
-    list->compare = compare;
-    list->deep_copy = deep_copy;
-    list->free_data = free_data;
+    list->data_compare = data_compare;
+    list->data_copy = data_copy;
+    list->data_free = data_free;
 
     return list;
 }
@@ -106,12 +106,12 @@ void* ll_copy(List *list)
     Node *current;
     void *data_copy;
 
-    list_copy = ll_create(list->compare, list->deep_copy,
-            list->free_data);
+    list_copy = ll_create(list->data_compare, list->data_copy,
+            list->data_free);
 
     for (current = list->head; current != NULL; current = current->next)
     {
-        data_copy = list->deep_copy(current->node_data);
+        data_copy = list->data_copy(current->node_data);
         ll_push_tail(list_copy, data_copy);
     }
 
@@ -126,7 +126,7 @@ void ll_free(List *list)
     while (list->head != NULL)
     {
         data = ll_pop(list);
-        list->free_data(data);
+        list->data_free(data);
     }
     free(list);
 
@@ -137,8 +137,8 @@ void ll_free(List *list)
 List* merge_sorted(List *list_a, List *list_b)
 {
     List *merged_list;
-    merged_list = ll_create(list_a->compare, list_a->deep_copy,
-            list_a->free_data);
+    merged_list = ll_create(list_a->data_compare, list_a->data_copy,
+            list_a->data_free);
 
     /* Walk through head_a and head_b constructing a new list. */
     while (list_a->head != NULL || list_b->head != NULL)
@@ -155,7 +155,7 @@ List* merge_sorted(List *list_a, List *list_b)
             ll_push_tail(merged_list, ll_pop(list_a));
         }
 
-        else if (merged_list->compare(list_a->head->node_data,
+        else if (merged_list->data_compare(list_a->head->node_data,
                     list_b->head->node_data) <= 0)
         {
             /* Pop from a when a's head is less than b's */
@@ -191,10 +191,10 @@ void ll_sort(List *list)
         return;
 
     /* Divide list into two halves. */
-    split_a = ll_create(list->compare, list->deep_copy,
-            list->free_data);
-    split_b = ll_create(list->compare, list->deep_copy,
-            list->free_data);
+    split_a = ll_create(list->data_compare, list->data_copy,
+            list->data_free);
+    split_b = ll_create(list->data_compare, list->data_copy,
+            list->data_free);
 
     /* Split into two lists. */
     while (list->head != NULL)
@@ -227,7 +227,7 @@ void* ll_search(List *list, void* data)
     Node *current;
     for (current = list->head; current != NULL; current = current->next)
     {
-        if (list->compare(data, current->node_data) == 0)
+        if (list->data_compare(data, current->node_data) == 0)
             return current->node_data;
     }
     return NULL;
@@ -265,7 +265,7 @@ void* ll_remove(List *list, void* data)
         return NULL;
 
 
-    if (list->compare(data, list->head->node_data) == 0)
+    if (list->data_compare(data, list->head->node_data) == 0)
     {
         /* Special case for removing the first item in the linked list. */
         matched_node = list->head;
@@ -276,7 +276,7 @@ void* ll_remove(List *list, void* data)
         /* Walk through list always looking for a match one step ahead. */
         for (index = list->head; index->next != NULL; index = index->next)
         {
-            if (list->compare(data, index->next->node_data) == 0)
+            if (list->data_compare(data, index->next->node_data) == 0)
             {
                 matched_node = index->next;
                 index->next = matched_node->next;
@@ -301,7 +301,7 @@ uint8_t ll_is_subset_of(List *list, List *subset)
 {
     Node *subset_index;
 
-    assert(list->compare == subset->compare);
+    assert(list->data_compare == subset->data_compare);
 
     /* Verify that each element of subset is somewhere within list. */
     for (subset_index = subset->head; subset_index != NULL;

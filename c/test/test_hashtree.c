@@ -117,7 +117,6 @@ void test_tree_create(void **state)
     assert_true(tree->root_node != NULL);
     assert_true(tree->root_node->parent_tree == tree);
     assert_true(tree->root_node->type == LEAF);
-
     assert_true(tree->root_node->parent_node == NULL);
     assert_true(tree->root_node->depth == 0);
     assert_true(tree->root_node->key == NULL);
@@ -133,40 +132,34 @@ void test_tree_insert(void **state)
     List *key_list;
     uint16_t *tmp_count;
 
-    tree = NULL;
     tree = tree_create(5, uint16_hash, uint16_list_hash,
             uint16_compare, uint16_copy, uint16_free,
             uint16_compare, uint16_copy, uint16_free);
-    assert_true(tree != NULL);
 
-    /* Insert the key 0 1 2 */
     key_list = make_key_list_three(0, 1, 2);
     tree_insert(tree, key_list, make_count(1));
 
-    /* Insert the key 1 2 3 */
     key_list = make_key_list_three(1, 2, 3);
     tree_insert(tree, key_list, make_count(1));
 
-    /* Insert the key 0 1 3 */
     key_list = make_key_list_three(0, 1, 3);
     tree_insert(tree, key_list, make_count(1));
 
-    /* Insert the duplicate key 0 1 3 */
+    /* Attempt to insert a duplicate key. */
     key_list = make_key_list_three(0, 1, 3);
     tmp_count = make_count(1);
     expect_assert_failure(tree_insert(tree, key_list, tmp_count));
     uint16_free(tmp_count);
     ll_free(key_list);
 
-    /* Insert the key 1 1 3 */
     key_list = make_key_list_three(1, 1, 3);
     tree_insert(tree, key_list, make_count(1));
 
-    /* Insert the key 1 1 1 */
     key_list = make_key_list_three(1, 1, 1);
     tree_insert(tree, key_list, make_count(1));
 
-    /* Insert the key 3 1 1 resulting in expansion of the root node. */
+    /* Assuming a node threshold of 5, this insertion cases the root
+     * node to be expanded. */
     key_list = make_key_list_three(3, 1, 1);
     tree_insert(tree, key_list, make_count(1));
 
@@ -275,4 +268,3 @@ int main(int argc, char* argv[]) {
     };
     return run_tests(tests);
 }
-
