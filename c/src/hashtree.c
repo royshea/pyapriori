@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "hashtree_private.h"
 
@@ -227,8 +228,7 @@ static void expand_node(TreeNode *node)
         Entry *e;
 
         bucket = old_table->buckets[i];
-        if (bucket == NULL)
-            continue;
+        assert(bucket != NULL);
 
         /* Rehash each entry. */
         for (e = (Entry *)ll_pop(bucket); e != NULL;
@@ -270,4 +270,67 @@ void tree_free(Hashtree *tree)
     free(tree->root_node);
     ll_free(tree->key_list_type);
     free(tree);
+}
+
+
+static void print_indent(uint8_t depth)
+{
+    for(; depth>0; depth--)
+        printf("  ");
+    return;
+}
+
+static void print_leaf_node(TreeNode *node)
+{
+    uint16_t i;
+    uint16_t j;
+    uint16_t k;
+
+    for (i=0; i<node->table->size; i++)
+    {
+        List *bucket;
+        print_indent(node->depth);
+        printf(".\n");
+
+        /* Print keys stored in current bucket. */
+        bucket = node->table->buckets[i];
+        ll_sort(bucket);
+        for (j = 0; j < ll_length(bucket); j++)
+        {
+            Entry *e;
+            e = (Entry *)ll_get_nth(bucket, j);
+
+            if (node->type == LEAF)
+            {
+                List *key_list;
+                key_list = e->key;
+                print_indent(node->depth + 1);
+                ll_sort(key_list);
+                for (k = 0; k < ll_length(key_list); k++)
+                {
+                    uint16_t *key;
+                    key = ll_get_nth(key_list, k);
+                    printf("%d ", *key);
+                }
+                printf("\n");
+            }
+            else
+            {
+                uint16_t *key;
+                key = e->key;
+                print_indent(node->depth + 1);
+                printf("%d\n", *key);
+                print_leaf_node((e->entry_data));
+            }
+        }
+    }
+}
+
+
+/* Print the contents of the hash tree. */
+void tree_print(Hashtree *tree)
+{
+    printf("ROOT\n");
+    print_leaf_node(tree->root_node);
+    printf("\n\n");
 }

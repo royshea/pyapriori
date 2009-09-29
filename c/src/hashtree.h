@@ -29,4 +29,6 @@ void* tree_search(Hashtree *tree, List *key_list);
 
 void tree_free(Hashtree *tree);
 
+void tree_print(Hashtree *tree);
+
 #endif /* HASHTREE_ */
