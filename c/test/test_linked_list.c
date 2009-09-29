@@ -6,61 +6,20 @@
 
 #include "linked_list.h"
 #include "linked_list_private.h"
+
+#include "uint16_list.h"
+
 #include "unit_testing.h"
 
 #define LIMIT 5
-
-
-/* Utility functions used by the testing. */
-void free_int(void* int_data)
-{
-    free(int_data);
-    return;
-}
-
-
-void* copy_int(void* int_data)
-{
-    int *data;
-    data = malloc(sizeof(int));
-    *data = *(int *)int_data;
-    return data;
-}
-
-
-int16_t compare_int(void* int_a, void* int_b)
-{
-    return *(int16_t*)int_a - *(int16_t*)int_b;
-}
-
-
-/* Utility for making lists. */
-List *make_int_list(int length, ...)
-{
-    List *list;
-    va_list ap;
-    int i;
-    int *data;
-
-    list = ll_create(compare_int, copy_int, free_int);
-    va_start(ap, length);
-    for (i=0; i<length; i++)
-    {
-        data = malloc(sizeof(int));
-        *data = va_arg(ap, int);
-        ll_push_tail(list, data);
-    }
-    va_end(ap);
-    return list;
-}
 
 
 /* Utility for testing that a list is sorted.  Frees the list in the
  * process. */
 void test_sorted_then_free(List *list)
 {
-    int *new;
-    int *old;
+    uint16_t *new;
+    uint16_t *old;
 
     new = ll_pop(list);
     while(new != NULL)
@@ -78,16 +37,16 @@ void test_sorted_then_free(List *list)
 void test_ll_free(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
     ll_free(list);
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(int16_t));
         *data = i;
         ll_push(list, data);
     }
@@ -98,15 +57,15 @@ void test_ll_free(void **state)
 void test_ll_pop(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
     assert_true(ll_pop(list) == NULL);
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(int16_t));
         *data = i;
         ll_push(list, data);
     }
@@ -126,17 +85,17 @@ void test_ll_pop(void **state)
 void test_ll_push(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(int16_t));
         *data = i;
         ll_push(list, data);
-        assert_int_equal(*(int *)list->head->node_data, i);
+        assert_int_equal(*(uint16_t *)list->head->node_data, i);
     }
 
     ll_free(list);
@@ -146,17 +105,17 @@ void test_ll_push(void **state)
 void test_ll_push_tail(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(int16_t));
         *data = i;
         ll_push_tail(list, data);
-        assert_int_equal(*(int *)list->head->node_data, 0);
+        assert_int_equal(*(uint16_t *)list->head->node_data, 0);
     }
 
     ll_free(list);
@@ -166,15 +125,15 @@ void test_ll_push_tail(void **state)
 void test_ll_length(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
 
     for (i=0; i<LIMIT; i++)
     {
         assert_int_equal(ll_length(list), i);
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(int16_t));
         *data = i;
         ll_push(list, data);
         assert_int_equal(ll_length(list), i+1);
@@ -187,15 +146,15 @@ void test_ll_length(void **state)
 void test_ll_copy(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
     List *copy;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(uint16_t));
         *data = i;
         ll_push(list, data);
     }
@@ -204,8 +163,8 @@ void test_ll_copy(void **state)
 
     for (i=LIMIT-1; i>=0; i--)
     {
-        int *data_a;
-        int *data_b;
+        uint16_t *data_a;
+        uint16_t *data_b;
 
         data_a = ll_pop(list);
         data_b = ll_pop(copy);
@@ -230,8 +189,8 @@ void test_merge_sorted(void **state)
     List *list_b;
     List *merged;
 
-    list_a = make_int_list(3, 0, 2, 4);
-    list_b = make_int_list(2, 1, 3);
+    list_a = uint16_list_create(3, 0, 2, 4);
+    list_b = uint16_list_create(2, 1, 3);
     merged = merge_sorted(list_a, list_b);
     test_sorted_then_free(merged);
 }
@@ -242,27 +201,27 @@ void test_ll_sort(void **state)
     List *list;
 
     /* Empty list. */
-    list = make_int_list(0);
+    list = uint16_list_create(0);
     ll_sort(list);
     test_sorted_then_free(list);
 
     /* In order list */
-    list = make_int_list(5, 0, 1, 2, 3, 4);
+    list = uint16_list_create(5, 0, 1, 2, 3, 4);
     ll_sort(list);
     test_sorted_then_free(list);
 
     /* Revese order list */
-    list = make_int_list(5, 4, 3, 2, 1, 0);
+    list = uint16_list_create(5, 4, 3, 2, 1, 0);
     ll_sort(list);
     test_sorted_then_free(list);
 
     /* Mixed order list */
-    list = make_int_list(5, 3, 4, 1, 2, 0);
+    list = uint16_list_create(5, 3, 4, 1, 2, 0);
     ll_sort(list);
     test_sorted_then_free(list);
 
     /* Repeated elements */
-    list = make_int_list(10, 3, 4, 1, 2, 0, 0, 2, 1, 4, 3);
+    list = uint16_list_create(10, 3, 4, 1, 2, 0, 0, 2, 1, 4, 3);
     ll_sort(list);
     test_sorted_then_free(list);
 
@@ -276,9 +235,9 @@ void test_ll_compare(void **state)
     List *list_b;
     List *list_c;
 
-    list_a = make_int_list(5, 0, 1, 2, 3, 5);
-    list_b = make_int_list(4, 0, 1, 2, 3);
-    list_c = make_int_list(5, 0, 1, 2, 1, 4);
+    list_a = uint16_list_create(5, 0, 1, 2, 3, 5);
+    list_b = uint16_list_create(4, 0, 1, 2, 3);
+    list_c = uint16_list_create(5, 0, 1, 2, 1, 4);
 
     assert_true(ll_list_compare((void *)list_a, (void *)list_a) == 0);
     assert_true(ll_list_compare((void *)list_a, (void *)list_b) > 0);
@@ -294,14 +253,14 @@ void test_ll_compare(void **state)
 void test_ll_search(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(int16_t));
         *data = i;
         ll_push(list, data);
     }
@@ -323,14 +282,14 @@ void test_ll_search(void **state)
 void test_ll_get_nth(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(int16_t));
         *data = i;
         ll_push(list, data);
     }
@@ -352,14 +311,14 @@ void test_ll_get_nth(void **state)
 void test_ll_remove(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(int16_t));
         *data = i;
         ll_push(list, data);
     }
@@ -381,40 +340,40 @@ void test_ll_remove(void **state)
 void test_ll_is_subset_of(void **state)
 {
     int i;
-    int *data;
+    uint16_t *data;
     List *list;
     List *subset;
 
-    list = ll_create(compare_int, copy_int, free_int);
+    list = ll_create(uint16_compare, uint16_copy, uint16_free);
 
     for (i=0; i<LIMIT; i++)
     {
-        data = malloc(sizeof(int));
+        data = malloc(sizeof(int16_t));
         *data = i;
         ll_push(list, data);
     }
 
 
-    subset = ll_create(compare_int, copy_int, free_int);
+    subset = ll_create(uint16_compare, uint16_copy, uint16_free);
 
     assert_true(ll_is_subset_of(list, subset));
 
-    data = malloc(sizeof(int));
+    data = malloc(sizeof(int16_t));
     *data = 4;
     ll_push(subset, data);
     assert_true(ll_is_subset_of(list, subset));
 
-    data = malloc(sizeof(int));
+    data = malloc(sizeof(int16_t));
     *data = 2;
     ll_push(subset, data);
     assert_true(ll_is_subset_of(list, subset));
 
-    data = malloc(sizeof(int));
+    data = malloc(sizeof(int16_t));
     *data = 6;
     ll_push(subset, data);
     assert_false(ll_is_subset_of(list, subset));
 
-    data = malloc(sizeof(int));
+    data = malloc(sizeof(int16_t));
     *data = 0;
     ll_push(subset, data);
     assert_false(ll_is_subset_of(list, subset));
@@ -424,12 +383,12 @@ void test_ll_is_subset_of(void **state)
     data = ll_pop(subset);
     free(data);
 
-    data = malloc(sizeof(int));
+    data = malloc(sizeof(int16_t));
     *data = 0;
     ll_push(subset, data);
     assert_true(ll_is_subset_of(list, subset));
 
-    data = malloc(sizeof(int));
+    data = malloc(sizeof(int16_t));
     *data = 4;
     ll_push(subset, data);
     assert_true(ll_is_subset_of(list, subset));
