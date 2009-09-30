@@ -177,7 +177,7 @@ void test_generate_frequent_size_one(void **state)
 }
 
 
-void test_generate_candidate_sets(void **state)
+void test_generate_candidate_sets_a(void **state)
 {
     List *candidates;
     List *candidate;
@@ -241,12 +241,48 @@ void test_generate_candidate_sets(void **state)
 }
 
 
+void test_generate_candidate_sets_b(void **state)
+{
+    List *candidates;
+    List *candidate;
+    List *tmp;
+
+    /* Create a seed of size three sets. */
+    candidates = ll_create(uint16_list_compare, uint16_list_copy,
+            uint16_list_free);
+    ll_push_tail(candidates, uint16_list_create(3, 1, 2, 3));
+    ll_push_tail(candidates, uint16_list_create(3, 1, 2, 4));
+    ll_push_tail(candidates, uint16_list_create(3, 1, 3, 4));
+    ll_push_tail(candidates, uint16_list_create(3, 1, 3, 5));
+    ll_push_tail(candidates, uint16_list_create(3, 2, 3, 4));
+
+    /* Calculate candidate sets.  Expeting (1,2,3,4).  The set (1,3,4,5)
+     * should be pruned since the subset of it (1,4,5) and others are
+     * not in the candidates. */
+    tmp = generate_candidate_sets(candidates);
+    ll_free(candidates);
+    candidates = tmp;
+    ll_sort(candidates);
+    assert_int_equal(ll_length(candidates), 1);
+
+    /* Verify the the expected sets were generated. */
+    tmp = uint16_list_create(4, 1, 2, 3, 4);
+    candidate = (List *)ll_get_nth(candidates, 0);
+    assert_int_equal(ll_list_compare(tmp, candidate), 0);
+    ll_free(tmp);
+
+    /* Clean up. */
+    ll_free(candidates);
+}
+
+
 int main(int argc, char* argv[]) {
     const UnitTest tests[] = {
         unit_test(test_read_uint16_list),
         unit_test(test_make_transactions_fixed_width),
         unit_test(test_generate_frequent_size_one),
-        unit_test(test_generate_candidate_sets),
+        unit_test(test_generate_candidate_sets_a),
+        unit_test(test_generate_candidate_sets_b),
     };
     return run_tests(tests);
 }

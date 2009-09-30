@@ -25,11 +25,15 @@
 List *generate_candidate_sets(List *prior_sets)
 {
     List *candidates;
+    List *pruned_candidates;
+    List * candidate;
     uint16_t i;
     uint16_t j;
     uint16_t k;
 
     candidates = ll_create(uint16_list_compare, uint16_list_copy,
+            uint16_list_free);
+    pruned_candidates = ll_create(uint16_list_compare, uint16_list_copy,
             uint16_list_free);
 
     /* Ensure that everything is sorted. */
@@ -71,12 +75,13 @@ List *generate_candidate_sets(List *prior_sets)
              * candidate set. */
             if (prefix_match == TRUE)
             {
-                List * candidate;
                 uint16_t *data;
 
                 candidate = ll_copy(set_a);
                 data = malloc(sizeof(uint16_t));
                 *data = *(uint16_t *)ll_get_nth(set_b, ll_length(set_b) - 1);
+
+                /* NOTE: This construction keeps all elements sorted. */
                 ll_push_tail(candidate, data);
                 ll_push_tail(candidates, candidate);
             }
@@ -84,7 +89,52 @@ List *generate_candidate_sets(List *prior_sets)
                 break;
         }
     }
-    return candidates;
+
+
+    /* Continue by pruning from candidates any set candidate where
+     * c_less_one is a subset of candidate missing exactly one element
+     * and c_less_one is not a member of prior_sets. */
+    for (candidate = ll_pop(candidates); candidate != NULL;
+            candidate = ll_pop(candidates))
+    {
+        uint8_t prune;
+
+        prune = FALSE;
+        for (i=0; i<ll_length(candidate); i++)
+        {
+            List *c_less_one;
+            uint16_t *data;
+
+            /* Create c_less_one by removing one element. */
+            c_less_one = ll_copy(candidate);
+            data = ll_get_nth(candidate, i);
+            data = ll_remove(c_less_one, data);
+            assert(data != NULL);
+            free(data);
+            assert(ll_length(candidate) - ll_length(c_less_one) == 1);
+
+            /* Check if c_less_one is in prior_sets. */
+            if (ll_search(prior_sets, c_less_one) == NULL)
+            {
+                ll_free(c_less_one);
+                prune = TRUE;
+                break;
+            }
+            ll_free(c_less_one);
+        }
+
+        /* Either prune the candidate or added it to the revised
+         * candidate list. */
+        if (prune == TRUE)
+            ll_free(candidate);
+        else
+            ll_push(pruned_candidates, candidate);
+    }
+
+    assert(ll_length(candidates) == 0);
+    ll_free(candidates);
+
+    return pruned_candidates;
 }
 
 /* Generate the set of size 1 transactions with minium support greater
