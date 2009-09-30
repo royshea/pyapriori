@@ -23,7 +23,7 @@ void* ll_pop(List *list);
 uint16_t ll_length(List *list);
 
 /* Create a (deep) copy of the linked list. */
-void* ll_copy(List *list);
+List *ll_copy(List *list);
 
 /* Free the linked list. */
 void ll_free(List *list);

@@ -100,7 +100,7 @@ uint16_t ll_length(List *list)
 }
 
 
-void* ll_copy(List *list)
+List *ll_copy(List *list)
 {
     List *list_copy;
     Node *current;
@@ -189,6 +189,12 @@ void ll_sort(List *list)
      * long.  Simply return the list. */
     if (list->head == NULL || list->head->next == NULL)
         return;
+
+    /* TODO: Check to see if the list is already sorted and return it
+     * unmodified if it is.  This is only an order N operation, so
+     * really not that expensive.  It has the potential to save a lot of
+     * time when working with pre-ordered lists.
+     */
 
     /* Divide list into two halves. */
     split_a = ll_create(list->data_compare, list->data_copy,

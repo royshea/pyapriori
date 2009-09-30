@@ -87,11 +87,12 @@ void test_make_transactions_fixed_width(void **state)
 }
 
 
-void test_generate_frequent_size_one(void **main)
+void test_generate_frequent_size_one(void **state)
 {
     List *stream;
     List *transactions;
     List *size_one;
+    List *singleton;
 
     /* Create a stream of transactions with the following properties:
      * 0 -> 1x
@@ -132,48 +133,120 @@ void test_generate_frequent_size_one(void **main)
     size_one = generate_frequent_size_one(stream, transactions, .02);
     assert_int_equal(ll_length(size_one), 6);
     ll_sort(size_one);
-    assert_int_equal(*(uint16_t *)ll_get_nth(size_one, 0), 0);
+    singleton = (List *)ll_get_nth(size_one, 0);
+    assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 0);
     ll_free(size_one);
 
     size_one = generate_frequent_size_one(stream, transactions, .04);
     assert_int_equal(ll_length(size_one), 5);
     ll_sort(size_one);
-    assert_int_equal(*(uint16_t *)ll_get_nth(size_one, 0), 1);
+    singleton = (List *)ll_get_nth(size_one, 0);
+    assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 1);
     ll_free(size_one);
 
     size_one = generate_frequent_size_one(stream, transactions, .06);
     assert_int_equal(ll_length(size_one), 4);
     ll_sort(size_one);
-    assert_int_equal(*(uint16_t *)ll_get_nth(size_one, 0), 2);
+    singleton = (List *)ll_get_nth(size_one, 0);
+    assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 2);
     ll_free(size_one);
 
     size_one = generate_frequent_size_one(stream, transactions, .08);
     assert_int_equal(ll_length(size_one), 3);
     ll_sort(size_one);
-    assert_int_equal(*(uint16_t *)ll_get_nth(size_one, 0), 3);
+    singleton = (List *)ll_get_nth(size_one, 0);
+    assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 3);
     ll_free(size_one);
 
     size_one = generate_frequent_size_one(stream, transactions, .10);
     assert_int_equal(ll_length(size_one), 2);
     ll_sort(size_one);
-    assert_int_equal(*(uint16_t *)ll_get_nth(size_one, 0), 4);
+    singleton = (List *)ll_get_nth(size_one, 0);
+    assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 4);
     ll_free(size_one);
 
     size_one = generate_frequent_size_one(stream, transactions, .12);
     assert_int_equal(ll_length(size_one), 1);
     ll_sort(size_one);
-    assert_int_equal(*(uint16_t *)ll_get_nth(size_one, 0), 9);
+    singleton = (List *)ll_get_nth(size_one, 0);
+    assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 9);
     ll_free(size_one);
 
     ll_free(transactions);
     ll_free(stream);
 }
 
+
+void test_generate_candidate_sets(void **state)
+{
+    List *candidates;
+    List *candidate;
+    List *tmp;
+
+    /* Create a seed of size one sets. */
+    candidates = ll_create(uint16_list_compare, uint16_list_copy,
+            uint16_list_free);
+    ll_push_tail(candidates, uint16_list_create(1, 3));
+    ll_push_tail(candidates, uint16_list_create(1, 4));
+    ll_push_tail(candidates, uint16_list_create(1, 9));
+
+    /* Calculate candidate sets.  From the singletons 3, 4, and 9 we
+     * expect the tuples (3,4), (3,9), and (4,9). */
+    tmp = generate_candidate_sets(candidates);
+    ll_free(candidates);
+    candidates = tmp;
+    ll_sort(candidates);
+    assert_int_equal(ll_length(candidates), 3);
+
+    /* Verify the the expected sets were generated. */
+    tmp = uint16_list_create(2, 3, 4);
+    candidate = (List *)ll_get_nth(candidates, 0);
+    assert_int_equal(ll_list_compare(tmp, candidate), 0);
+    ll_free(tmp);
+
+    tmp = uint16_list_create(2, 3, 9);
+    candidate = (List *)ll_get_nth(candidates, 1);
+    assert_int_equal(ll_list_compare(tmp, candidate), 0);
+    ll_free(tmp);
+
+    tmp = uint16_list_create(2, 4, 9);
+    candidate = (List *)ll_get_nth(candidates, 2);
+    assert_int_equal(ll_list_compare(tmp, candidate), 0);
+    ll_free(tmp);
+
+    /* Calculate candidate sets.  From the tuples (3,4), (3,9), and
+     * (4,9) we expect the single set (3,4,9). */
+    tmp = generate_candidate_sets(candidates);
+    ll_free(candidates);
+    candidates = tmp;
+    ll_sort(candidates);
+    assert_int_equal(ll_length(candidates), 1);
+
+    /* Verify the the expected sets were generated. */
+    tmp = uint16_list_create(3, 3, 4, 9);
+    candidate = (List *)ll_get_nth(candidates, 0);
+    assert_int_equal(ll_list_compare(tmp, candidate), 0);
+    ll_free(tmp);
+
+    /* Calculate candidate sets.  From the single set (3,4,9), we expect
+     * to get nothing. */
+    tmp = generate_candidate_sets(candidates);
+    ll_free(candidates);
+    candidates = tmp;
+    ll_sort(candidates);
+    assert_int_equal(ll_length(candidates), 0);
+
+    /* Clean up. */
+    ll_free(candidates);
+}
+
+
 int main(int argc, char* argv[]) {
     const UnitTest tests[] = {
         unit_test(test_read_uint16_list),
         unit_test(test_make_transactions_fixed_width),
         unit_test(test_generate_frequent_size_one),
+        unit_test(test_generate_candidate_sets),
     };
     return run_tests(tests);
 }

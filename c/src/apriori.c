@@ -10,8 +10,88 @@
 #include "../test/unit_testing.h"
 #endif /* UNIT_TESTING */
 
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+/* Given a list of size n transactions that are frequent, generate the
+ * set of candidate lists that are of size n+1.  This generation is
+ * based on the algorithm put forward in section 2,1,1 of agrawal94fast.
+ */
+List *generate_candidate_sets(List *prior_sets)
+{
+    List *candidates;
+    uint16_t i;
+    uint16_t j;
+    uint16_t k;
+
+    candidates = ll_create(uint16_list_compare, uint16_list_copy,
+            uint16_list_free);
+
+    /* Ensure that everything is sorted. */
+    for (i=0; i<ll_length(prior_sets); i++)
+        ll_sort(ll_get_nth(prior_sets, i));
+    ll_sort(prior_sets);
+
+
+    /* Examine pairs of sets from prior_sets.  For those sets that only
+     * differ in the last element, create a new set using the union of
+     * the two sets.  By ordering the sets, we can abort the operation
+     * and move the outer index as soon as two sets are found that
+     * differ by more than the last element.
+     */
+    for (i=0; i<ll_length(prior_sets); i++)
+    {
+        List *set_a;
+        set_a = ll_get_nth(prior_sets, i);
+
+        for (j=i+1; j<ll_length(prior_sets); j++)
+        {
+            uint8_t prefix_match;
+            List *set_b;
+            set_b = ll_get_nth(prior_sets, j);
+
+            /* Compare the n-1 elements of each set. */
+            prefix_match = TRUE;
+            for (k=0; k<ll_length(set_a)-1; k++)
+            {
+                if (*(uint16_t *)ll_get_nth(set_a, k) !=
+                        *(uint16_t *)ll_get_nth(set_b, k))
+                {
+                    prefix_match = FALSE;
+                    break;
+                }
+            }
+
+            /* If all but the last element match, then create a
+             * candidate set. */
+            if (prefix_match == TRUE)
+            {
+                List * candidate;
+                uint16_t *data;
+
+                candidate = ll_copy(set_a);
+                data = malloc(sizeof(uint16_t));
+                *data = *(uint16_t *)ll_get_nth(set_b, ll_length(set_b) - 1);
+                ll_push_tail(candidate, data);
+                ll_push_tail(candidates, candidate);
+            }
+            else
+                break;
+        }
+    }
+    return candidates;
+}
+
 /* Generate the set of size 1 transactions with minium support greater
- * than the specified support ratio.
+ * than the specified support ratio.  The members of the resulting list
+ * are each stored as a list of length one.  This results in the same
+ * structure being used here as later when sets are of length greater
+ * than one.
  *
  * TODO: Ample opportunity for optimization. */
 List *generate_frequent_size_one(List *stream, List *transactions,
@@ -27,7 +107,8 @@ List *generate_frequent_size_one(List *stream, List *transactions,
     assert(min_support > 0);
 
     unique_elements = ll_create(uint16_compare, uint16_copy, uint16_free);
-    size_one = ll_create(uint16_compare, uint16_copy, uint16_free);
+    size_one = ll_create(uint16_list_compare, uint16_list_copy,
+            uint16_list_free);
 
     /* Iterate through stream generate a list of unique values. */
     for (stream_index=0; stream_index<ll_length(stream); stream_index++)
@@ -65,7 +146,12 @@ List *generate_frequent_size_one(List *stream, List *transactions,
 
         /* Store unique_val in size_one if it has enough support. */
         if (support_count >= min_support)
-            ll_push(size_one, unique_val);
+        {
+            List *singleton;
+            singleton = ll_create(uint16_compare, uint16_copy, uint16_free);
+            ll_push(singleton, unique_val);
+            ll_push(size_one, singleton);
+        }
         else
             free(unique_val);
     }
