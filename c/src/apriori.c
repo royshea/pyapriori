@@ -18,6 +18,61 @@
 #define FALSE 0
 #endif
 
+
+/* Return TRUE if the first n-1 elements of two length n lists match. */
+static uint8_t match_prefix(List *list_a, List *list_b)
+{
+    uint16_t i;
+
+    assert(ll_length(list_a) == ll_length(list_b));
+
+    /* Compare the n-1 elements of each set. */
+    for (i = 0; i < ll_length(list_a)-1; i++)
+    {
+        if (*(uint16_t *)ll_get_nth(list_a, i) !=
+                *(uint16_t *)ll_get_nth(list_b, i))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/* Return true if there exists a set c_less_one that is a subset of
+ * candidate missing exactly one element and that is not a member of
+ * any of the prior_sets. Note that candidate is an uint16_t list and
+ * that prior_sets is a list of uint16_t lists. */
+static uint8_t prune(List *candidate, List *prior_sets)
+{
+    uint16_t i;
+
+    for (i=0; i<ll_length(candidate); i++)
+    {
+        List *c_less_one;
+        uint16_t *data;
+
+        /* Create c_less_one by removing one element. */
+        c_less_one = ll_copy(candidate);
+        data = ll_get_nth(candidate, i);
+        data = ll_remove(c_less_one, data);
+        assert(data != NULL);
+        free(data);
+        assert(ll_length(candidate) - ll_length(c_less_one) == 1);
+
+        /* Check if c_less_one is in prior_sets. */
+        if (ll_search(prior_sets, c_less_one) == NULL)
+        {
+            ll_free(c_less_one);
+            return TRUE;
+        }
+
+        ll_free(c_less_one);
+    }
+
+    return FALSE;
+}
+
+
 /* Given a list of size n transactions that are frequent, generate the
  * set of candidate lists that are of size n+1.  This generation is
  * based on the algorithm put forward in section 2,1,1 of agrawal94fast.
@@ -26,10 +81,9 @@ List *generate_candidate_sets(List *prior_sets)
 {
     List *candidates;
     List *pruned_candidates;
-    List * candidate;
+    List *candidate;
     uint16_t i;
     uint16_t j;
-    uint16_t k;
 
     candidates = ll_create(uint16_list_compare, uint16_list_copy,
             uint16_list_free);
@@ -55,25 +109,12 @@ List *generate_candidate_sets(List *prior_sets)
 
         for (j=i+1; j<ll_length(prior_sets); j++)
         {
-            uint8_t prefix_match;
             List *set_b;
             set_b = ll_get_nth(prior_sets, j);
 
-            /* Compare the n-1 elements of each set. */
-            prefix_match = TRUE;
-            for (k=0; k<ll_length(set_a)-1; k++)
-            {
-                if (*(uint16_t *)ll_get_nth(set_a, k) !=
-                        *(uint16_t *)ll_get_nth(set_b, k))
-                {
-                    prefix_match = FALSE;
-                    break;
-                }
-            }
-
             /* If all but the last element match, then create a
              * candidate set. */
-            if (prefix_match == TRUE)
+            if (match_prefix(set_a, set_b) == TRUE)
             {
                 uint16_t *data;
 
@@ -90,52 +131,23 @@ List *generate_candidate_sets(List *prior_sets)
         }
     }
 
-
     /* Continue by pruning from candidates any set candidate where
      * c_less_one is a subset of candidate missing exactly one element
      * and c_less_one is not a member of prior_sets. */
     for (candidate = ll_pop(candidates); candidate != NULL;
             candidate = ll_pop(candidates))
     {
-        uint8_t prune;
-
-        prune = FALSE;
-        for (i=0; i<ll_length(candidate); i++)
-        {
-            List *c_less_one;
-            uint16_t *data;
-
-            /* Create c_less_one by removing one element. */
-            c_less_one = ll_copy(candidate);
-            data = ll_get_nth(candidate, i);
-            data = ll_remove(c_less_one, data);
-            assert(data != NULL);
-            free(data);
-            assert(ll_length(candidate) - ll_length(c_less_one) == 1);
-
-            /* Check if c_less_one is in prior_sets. */
-            if (ll_search(prior_sets, c_less_one) == NULL)
-            {
-                ll_free(c_less_one);
-                prune = TRUE;
-                break;
-            }
-            ll_free(c_less_one);
-        }
-
-        /* Either prune the candidate or added it to the revised
-         * candidate list. */
-        if (prune == TRUE)
+        if (prune(candidate, prior_sets) == TRUE)
             ll_free(candidate);
         else
             ll_push(pruned_candidates, candidate);
     }
-
     assert(ll_length(candidates) == 0);
     ll_free(candidates);
 
     return pruned_candidates;
 }
+
 
 /* Generate the set of size 1 transactions with minium support greater
  * than the specified support ratio.  The members of the resulting list
