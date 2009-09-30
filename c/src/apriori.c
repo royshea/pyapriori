@@ -40,11 +40,13 @@ Hashtree *build_hashtree(List *list)
         count = malloc(sizeof(count));
         assert(count != NULL);
         *count = 0;
+        ll_sort(key);
         tree_insert(tree, key, count);
     }
 
     return tree;
 }
+
 
 /* Return TRUE if the first n-1 elements of two length n lists match. */
 static uint8_t match_prefix(List *list_a, List *list_b)

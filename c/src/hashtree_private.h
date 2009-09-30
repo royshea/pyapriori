@@ -17,6 +17,14 @@ enum NodeType {BODY, LEAF};
 
 struct _tree_tree;
 
+typedef struct
+{
+    List *key;
+    void *data;
+    struct _tree_tree *parent_tree;
+} KeyData;
+
+
 typedef struct _tree_node
 {
     /* Link back to the hash tree contaning this node.  This provides
@@ -30,7 +38,12 @@ typedef struct _tree_node
 
     /* Tree structure specific information. */
     struct _tree_node *parent_node;
-    Hashtable *table;
+
+    /* Hashtable used by body nodes. */
+    Hashtable *body_table;
+
+    /* List of keys used by leaf nodes. */
+    List *leaf_list;
 
 } TreeNode;
 
