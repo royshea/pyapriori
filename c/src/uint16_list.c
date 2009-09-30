@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "linked_list.h"
 
@@ -101,4 +102,13 @@ List *uint16_list_create(uint16_t length, ...)
     }
     va_end(ap);
     return list;
+}
+
+/* Print out a list of uint16_t data. */
+void uint16_list_print(List *list)
+{
+    uint16_t i;
+    for (i=0; i<ll_length(list); i++)
+        printf("%d ", *(uint16_t *)ll_get_nth(list, i));
+    printf("\n");
 }
