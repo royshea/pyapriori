@@ -3,6 +3,8 @@
 #include <assert.h>
 
 #include "linked_list.h"
+#include "hashtree.h"
+
 #include "uint16_list.h"
 #include "apriori.h"
 
@@ -18,6 +20,31 @@
 #define FALSE 0
 #endif
 
+
+/* Construct a hash tree from a List of key lists. */
+Hashtree *build_hashtree(List *list)
+{
+    Hashtree *tree;
+    uint16_t i;
+
+    tree = tree_create(5, uint16_hash, uint16_list_hash,
+            uint16_compare, uint16_copy, uint16_free,
+            uint16_compare, uint16_copy, uint16_free);
+
+    for (i = 0; i < ll_length(list); i++)
+    {
+        List *key;
+        uint16_t *count;
+
+        key = ll_copy(ll_get_nth(list, i));
+        count = malloc(sizeof(count));
+        assert(count != NULL);
+        *count = 0;
+        tree_insert(tree, key, count);
+    }
+
+    return tree;
+}
 
 /* Return TRUE if the first n-1 elements of two length n lists match. */
 static uint8_t match_prefix(List *list_a, List *list_b)

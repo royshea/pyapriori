@@ -5,6 +5,7 @@
 #include <google/cmockery.h>
 #include <stdio.h>
 
+#include "hashtree.h"
 #include "apriori.h"
 #include "uint16_list.h"
 
@@ -276,6 +277,28 @@ void test_generate_candidate_sets_b(void **state)
 }
 
 
+void test_build_hashtree(void **state)
+{
+    List *keys;
+    Hashtree *tree;
+
+    /* Create a collection of keys. */
+    keys = ll_create(uint16_list_compare, uint16_list_copy,
+            uint16_list_free);
+    ll_push_tail(keys, uint16_list_create(3, 1, 2, 3));
+    ll_push_tail(keys, uint16_list_create(3, 1, 2, 4));
+    ll_push_tail(keys, uint16_list_create(3, 1, 3, 4));
+    ll_push_tail(keys, uint16_list_create(3, 1, 3, 5));
+    ll_push_tail(keys, uint16_list_create(3, 2, 3, 4));
+
+    /* Encode keys in a hash table. */
+    tree = build_hashtree(keys);
+    tree_print(tree);
+    tree_free(tree);
+    ll_free(keys);
+}
+
+
 int main(int argc, char* argv[]) {
     const UnitTest tests[] = {
         unit_test(test_read_uint16_list),
@@ -283,6 +306,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_generate_frequent_size_one),
         unit_test(test_generate_candidate_sets_a),
         unit_test(test_generate_candidate_sets_b),
+        unit_test(test_build_hashtree),
     };
     return run_tests(tests);
 }

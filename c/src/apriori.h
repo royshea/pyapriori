@@ -2,6 +2,10 @@
 #define APRIORI_
 
 #include "linked_list.h"
+#include "hashtree.h"
+
+/* Construct a hash tree from a List of key lists. */
+Hashtree *build_hashtree(List *list);
 
 /* Given a list of size n transactions that are frequent, generate the
  * set of candidate lists that are of size n+1.  This generation is
