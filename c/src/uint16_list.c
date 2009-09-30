@@ -56,6 +56,34 @@ void uint16_list_free(void *data)
 }
 
 
+uint16_t uint16_list_hash(void *key)
+{
+    List* key_list;
+    uint16_t hash;
+    void *data;
+    uint16_t i;
+
+    key_list = (List *)key;
+
+    /* XOR and shift hashes of individual keys together to generate a
+     * single hash for a list of keys.
+     *
+     * TODO: XOR is not a great way to combine hashes, but it works for
+     * now.
+     */
+
+    hash = 0;
+    for (i=0; i<ll_length(key_list); i++)
+    {
+        data = ll_get_nth(key_list, i);
+        hash ^= uint16_hash(data);
+        hash <<= 1;
+    }
+
+    return hash;
+}
+
+
 /* Utility for making lists. */
 List *uint16_list_create(uint16_t length, ...)
 {
