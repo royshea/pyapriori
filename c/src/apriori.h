@@ -4,7 +4,8 @@
 #include "linked_list.h"
 
 /* Generate frequent sets of size 1. */
-List *generate_frequent_size_one();
+List *generate_frequent_size_one(List *stream, List *transactions,
+        float support_ratio);
 
 /* Convert a list of data into a distinct "transaction" lists.  Each
  * transaction is a copy of the list contained within a fixed width

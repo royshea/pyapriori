@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 
 #include "linked_list.h"
@@ -8,6 +9,72 @@
 #if UNIT_TESTING
 #include "../test/unit_testing.h"
 #endif /* UNIT_TESTING */
+
+/* Generate the set of size 1 transactions with minium support greater
+ * than the specified support ratio.
+ *
+ * TODO: Ample opportunity for optimization. */
+List *generate_frequent_size_one(List *stream, List *transactions,
+        float support_ratio)
+{
+    uint16_t min_support;
+    List *unique_elements;
+    List *size_one;
+    uint16_t stream_index;
+    uint16_t *unique_val;
+
+    min_support = support_ratio * ll_length(stream);
+    assert(min_support > 0);
+
+    unique_elements = ll_create(uint16_compare, uint16_copy, uint16_free);
+    size_one = ll_create(uint16_compare, uint16_copy, uint16_free);
+
+    /* Iterate through stream generate a list of unique values. */
+    for (stream_index=0; stream_index<ll_length(stream); stream_index++)
+    {
+        uint16_t *tmp;
+
+        tmp = ll_get_nth(stream, stream_index);
+        if (ll_search(unique_elements, tmp) == NULL)
+        {
+            uint16_t *data;
+            data = malloc(sizeof(uint16_t));
+            *data = *tmp;
+            ll_push(unique_elements, data);
+        }
+    }
+
+    /* Count the number of times each unique element occures within
+     * stream.  If this is greater than or equal to the min_support,
+     * then add the unique element to the size_one list. */
+    for (unique_val = ll_pop(unique_elements); unique_val != NULL;
+            unique_val = ll_pop(unique_elements))
+    {
+        uint16_t support_count;
+        uint16_t stream_index;
+
+        /* Count the number of transactions involving unique_val. */
+        support_count = 0;
+        for (stream_index=0; stream_index<ll_length(stream);
+                stream_index++)
+        {
+            if (*unique_val == *(uint16_t *)ll_get_nth(stream, stream_index))
+                support_count += 1;
+
+        }
+
+        /* Store unique_val in size_one if it has enough support. */
+        if (support_count >= min_support)
+            ll_push(size_one, unique_val);
+        else
+            free(unique_val);
+    }
+
+    assert(ll_length(unique_elements) == 0);
+    ll_free(unique_elements);
+
+    return size_one;
+}
 
 
 /* Convert a list of data into a distinct "transaction" lists.  Each
@@ -39,10 +106,10 @@ List *make_transactions_fixed_width(List *stream, uint8_t width)
             uint16_t *data;
             data = malloc(sizeof(uint16_t));
             *data = *(uint16_t *)ll_get_nth(stream, stream_index + window_index);
+            ll_push(sublist, data);
         }
 
-        /* Add sorted sublist to the set of transactions. */
-        ll_sort(sublist);
+        /* Add sublist to the set of transactions. */
         ll_push(transaction_list, sublist);
     }
 
