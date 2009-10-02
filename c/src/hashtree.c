@@ -13,24 +13,6 @@
 #endif /* UNIT_TESTING */
 
 
-/* Generic function used to copy key lists.
- *
- * TODO: This function has not been tested.
- */
-#if 0
-static void *key_list_copy(void *data)
-{
-    return ll_copy((List *)data);
-}
-
-
-/* Generic function used to free key lists. */
-static void key_list_free(void *data)
-{
-    ll_free((List *)data);
-}
-#endif
-
 /* Sort based on the keys in a key data tuple. */
 static int16_t key_data_compare(void *key_data_a, void *key_data_b)
 {
@@ -326,101 +308,25 @@ void tree_free(Hashtree *tree)
 }
 
 
-static void print_indent(uint8_t depth)
-{
-    for(; depth>0; depth--)
-        printf("  ");
-    return;
-}
-
-static void print_leaf_node(TreeNode *node)
-{
-    uint16_t i;
-    uint16_t j;
-
-    print_indent(node->depth);
-    printf(".\n");
-    for (i=0; i<ll_length(node->leaf_list); i++)
-    {
-
-        KeyData *kd;
-        kd = ll_get_nth(node->leaf_list, i);
-        print_indent(node->depth + 1);
-        for (j = 0; j < ll_length(kd->key); j++)
-        {
-            uint16_t *key;
-            key = ll_get_nth(kd->key, j);
-            printf("%d ", *key);
-        }
-        printf("\n");
-    }
-}
-
-
-static void print_node(TreeNode *node)
-{
-    uint16_t i;
-    uint16_t j;
-
-    if (node->type == LEAF)
-        print_leaf_node(node);
-    else
-    {
-        for (i=0; i<node->body_table->size; i++)
-        {
-            List *bucket;
-            bucket = node->body_table->buckets[i];
-
-            for (j = 0; j < ll_length(bucket); j++)
-            {
-                Entry *e;
-                uint16_t *key;
-
-                e = (Entry *)ll_get_nth(bucket, j);
-                key = e->key;
-
-                print_indent(node->depth + 1);
-                printf("%d\n", *key);
-                print_leaf_node((e->entry_data));
-            }
-        }
-    }
-}
-
-
-#if 0
+/* Recursive function to look for key_list within the tree containing
+ * node.  Helper function used by mark_subsets. */
 static void mark_subsets_helper(TreeNode *node, List *key_list,
         uint8_t key_index)
 {
     if (node->type == LEAF)
     {
-        List *candidates;
-        void *key;
+        List *key_data_list;
+        uint16_t i;
 
-        /* Mark leaf sets are contained within the key.
-         *
-         * TODO: Leaf nodes actually contain one additional level of
-         * hashing.  That requires the extra level of processing in this
-         * function.  An alternate is to revise the hash_tree
-         * implementation to have LEAF nodes contain a linked list,
-         * rather than a hash table. */
-        key = ll_get_nth(key_list, key_index);
-        candidates = ht_search(node->body_table, key);
-        if (next_node == NULL)
-            return;
-        else
+        key_data_list = node->leaf_list;
+        for (i = 0; i < ll_length(key_data_list); i++)
         {
-            List *candidate;
-            uint8_t i;
-            for (i = 0; i < ll_len(candidates); i++)
-            {
-                candidate = ll_get_nth(candidates);
-                if (ll_subset(key_list, candidate) == TRUE)
-                {
-
-                }
-            }
+            KeyData *kd;
+            kd = ll_get_nth(key_data_list, i);
+            if (ll_is_subset_of(key_list, kd->key))
+                *(uint16_t *)kd->data += 1;
         }
+
     }
     else
     {
@@ -445,21 +351,94 @@ static void mark_subsets_helper(TreeNode *node, List *key_list,
     return;
 }
 
-/* Return true if list is a subset of one of the lists contained within
- * the hashtree tree.   See agrawal94fast section 2.1.2 for details.
+
+/* Increment the data field of all keys stored in tree that are a subset
+ * of the specified key_list (transaction).
+ *
+ * See agrawal94fast section 2.1.2 for details.
  *
  * NOTE: Assumes that all lists were sorted before insertion into the
- * hashtree. */
-uint8_t mark_subsets(Hashtree *tree, List *key)
+ * hashtree.
+ *
+ * TODO: Have this take a function pointer, marking_function, that
+ * handles the marking of match nodes.  Current implementation assumes
+ * simple incrementing of a uint16_t data field.
+ */
+void tree_mark_subsets(Hashtree *tree, List *key_list)
 {
-    return is_subset_helper(tree->root_node, key, 0);
+    mark_subsets_helper(tree->root_node, key_list, 0);
 }
-#endif
 
-/* Print the contents of the hash tree. */
-void tree_print(Hashtree *tree)
+
+/* Helper for tree_print_uint16. */
+static void print_indent(uint8_t depth)
+{
+    for(; depth>0; depth--)
+        printf("  ");
+    return;
+}
+
+/* Helper for tree_print_uint16. */
+static void leaf_node_print_uint16(TreeNode *node)
+{
+    uint16_t i;
+    uint16_t j;
+
+    print_indent(node->depth);
+    printf(".\n");
+    for (i=0; i<ll_length(node->leaf_list); i++)
+    {
+
+        KeyData *kd;
+        kd = ll_get_nth(node->leaf_list, i);
+        print_indent(node->depth + 1);
+        for (j = 0; j < ll_length(kd->key); j++)
+        {
+            uint16_t *key;
+            key = ll_get_nth(kd->key, j);
+            printf("%d ", *key);
+        }
+        printf(": %d\n", *(uint16_t *)kd->data);
+    }
+}
+
+
+/* Helper for tree_print_uint16. */
+static void node_print_uint16(TreeNode *node)
+{
+    uint16_t i;
+    uint16_t j;
+
+    if (node->type == LEAF)
+        leaf_node_print_uint16(node);
+    else
+    {
+        for (i=0; i<node->body_table->size; i++)
+        {
+            List *bucket;
+            bucket = node->body_table->buckets[i];
+
+            for (j = 0; j < ll_length(bucket); j++)
+            {
+                Entry *e;
+                uint16_t *key;
+
+                e = (Entry *)ll_get_nth(bucket, j);
+                key = e->key;
+
+                print_indent(node->depth + 1);
+                printf("%d\n", *key);
+                node_print_uint16((e->entry_data));
+            }
+        }
+    }
+}
+
+
+/* Print the contents of the hash tree.  Assumes data is a uint16_t*/
+void tree_print_uint16(Hashtree *tree)
 {
     printf("ROOT\n");
-    print_node(tree->root_node);
+    node_print_uint16(tree->root_node);
     printf("\n\n");
 }

@@ -5,9 +5,13 @@
 #include <google/cmockery.h>
 #include <stdio.h>
 
-#include "hashtree.h"
-#include "apriori.h"
 #include "uint16_list.h"
+
+#include "hashtree.h"
+#include "hashtable.h"
+
+#include "hashtree_private.h"
+#include "apriori.h"
 
 #include "unit_testing.h"
 
@@ -290,10 +294,45 @@ void test_build_hashtree(void **state)
     ll_push_tail(keys, uint16_list_create(3, 1, 3, 4));
     ll_push_tail(keys, uint16_list_create(3, 1, 3, 5));
     ll_push_tail(keys, uint16_list_create(3, 2, 3, 4));
+    ll_push_tail(keys, uint16_list_create(3, 2, 4, 5));
 
     /* Encode keys in a hash table. */
     tree = build_hashtree(keys);
-    tree_print(tree);
+
+    assert(tree->root_node->type == BODY);
+    assert_int_equal(ht_num_entries(tree->root_node->body_table), 2);
+
+    tree_free(tree);
+    ll_free(keys);
+}
+
+
+void test_tree_mark_subsets(void **state)
+{
+    List *keys;
+    List *transaction;
+    Hashtree *tree;
+
+    /* Create a collection of keys. */
+    keys = ll_create(uint16_list_compare, uint16_list_copy,
+            uint16_list_free);
+    ll_push_tail(keys, uint16_list_create(3, 1, 2, 3));
+    ll_push_tail(keys, uint16_list_create(3, 1, 2, 4));
+    ll_push_tail(keys, uint16_list_create(3, 1, 3, 4));
+    ll_push_tail(keys, uint16_list_create(3, 1, 3, 5));
+    ll_push_tail(keys, uint16_list_create(3, 2, 3, 4));
+    ll_push_tail(keys, uint16_list_create(3, 2, 4, 5));
+
+    /* Encode keys in a hash table. */
+    tree = build_hashtree(keys);
+
+    /* Mark keys that are the subset of transaction. */
+    tree_print_uint16(tree);
+    transaction = uint16_list_create(5, 1, 2, 3, 5, 6);
+    tree_mark_subsets(tree, transaction);
+    tree_print_uint16(tree);
+
+    ll_free(transaction);
     tree_free(tree);
     ll_free(keys);
 }
@@ -307,6 +346,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_generate_candidate_sets_a),
         unit_test(test_generate_candidate_sets_b),
         unit_test(test_build_hashtree),
+        unit_test(test_tree_mark_subsets),
     };
     return run_tests(tests);
 }
