@@ -41,7 +41,8 @@ void test_tree_create(void **state)
     assert_true(tree->root_node->parent_node == NULL);
     assert_true(tree->root_node->depth == 0);
     assert_true(tree->root_node->key == NULL);
-    assert_true(tree->root_node->body_table != NULL);
+    assert_true(tree->root_node->body_table == NULL);
+    assert_true(tree->root_node->leaf_list != NULL);
 
     tree_free(tree);
 }

@@ -24,7 +24,7 @@ test_hashtable: test_hashtable.o
 
 test_hashtree: test_hashtree.o
 	$(CC) $(CFLAGS) $< -o $@ $(LIBS)
-	./test_hashtree
+	#./test_hashtree
 
 test_apriori: test_apriori.o
 	$(CC) $(CFLAGS) $< -o $@ $(LIBS)

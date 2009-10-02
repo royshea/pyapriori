@@ -62,7 +62,7 @@ static void *key_data_copy(void *key_data)
 static void key_data_free(void *key_data)
 {
     KeyData *kd;
-    kd = (KeyData *)kd;
+    kd = (KeyData *)key_data;
     ll_free(kd->key);
     kd->parent_tree->data_free(kd->data);
     free(kd);
@@ -158,7 +158,7 @@ static TreeNode* find_leaf(TreeNode *node, List *key_list)
         return node;
 
     /* Descend through BODY nodes tree until a LEAF node is found. */
-    while (key_list)
+    while (TRUE)
     {
         void *key;
         TreeNode *next_node;
@@ -166,8 +166,7 @@ static TreeNode* find_leaf(TreeNode *node, List *key_list)
         /* Descend one step deeper into the tree.
          *
          * Currently in a BODY node.  Therefore it is keyed using the
-         * individual key_list element, key, rather than the entire
-         * key_list. */
+         * individual element of the list stored in key_list. */
         key = ll_get_nth(key_list, node->depth);
         next_node = ht_search(node->body_table, key);
 
@@ -198,24 +197,26 @@ static TreeNode* find_leaf(TreeNode *node, List *key_list)
 
 
 static void expand_node(TreeNode *node);
-static void insert_to_leaf(TreeNode *node, List *key_list, void *data)
+static void insert_to_leaf(TreeNode *node, KeyData *kd)
 {
     TreeNode *leaf;
     void *old_data;
-    KeyData *kd;
 
-    /* Locate the leaf that should house key_list. */
-    leaf = find_leaf(node, key_list);
+    /* Locate the leaf that should house the key data. */
+    leaf = find_leaf(node, kd->key);
 
-    /* Check if key_list is already present in the hash tree. */
-    old_data = ll_search(leaf->leaf_list, key_list);
-    assert(old_data == NULL);
+    /* Check if the key data is already present in the hash tree. */
+    old_data = ll_search(leaf->leaf_list, kd);
 
-    /* Insert data into the table if key_list is not already
+    /* Something is wrong.  Clean up (for unit testing) and then fail. */
+    if (old_data != NULL)
+    {
+        free(kd);
+        assert(old_data == NULL);
+    }
+
+    /* Insert data into the table if the keyed data not already
      * present. */
-    kd = malloc(sizeof(KeyData));
-    kd->key = key_list;
-    kd->data = data;
     ll_push(leaf->leaf_list, kd);
     if (ll_length(leaf->leaf_list) > leaf->parent_tree->threshold)
         expand_node(leaf);
@@ -260,17 +261,15 @@ static void expand_node(TreeNode *node)
             ht->key_compare, ht->key_copy, ht->key_free,
             NULL, NULL, tree_node_free);
 
-    /* NOTE: Currently requires internal access to the hash table.  It
+    /* Rehash each entry.
+     *
+     * NOTE: Currently requires internal access to the hash table.  It
      * would be good to create an iterator for the hash table to avoid
      * this violation of the data type abstraction.
      */
     for (kd = ll_pop(node->leaf_list); kd != NULL;
             kd = ll_pop(node->leaf_list))
-    {
-        /* Rehash each entry. */
-        insert_to_leaf(node, kd->key, kd->data);
-        free(kd);
-    }
+        insert_to_leaf(node, kd);
 
     ll_free(node->leaf_list);
     node->leaf_list = NULL;
@@ -280,7 +279,13 @@ static void expand_node(TreeNode *node)
 /* Insert data into the tree using key_list. */
 void tree_insert(Hashtree *tree, List *key_list, void *data)
 {
-    insert_to_leaf(tree->root_node, key_list, data);
+    KeyData *kd;
+    kd = malloc(sizeof(KeyData));
+    kd->key = key_list;
+    kd->data = data;
+    kd->parent_tree = tree;
+
+    insert_to_leaf(tree->root_node, kd);
 }
 
 
@@ -288,19 +293,33 @@ void tree_insert(Hashtree *tree, List *key_list, void *data)
 void* tree_search(Hashtree *tree, List *key_list)
 {
     TreeNode *leaf;
+    KeyData kd;
+    KeyData *result;
+
+    kd.key = key_list;
+    kd.data = NULL;
+    kd.parent_tree = tree;
 
     /* Locate the leaf that should house key_list and then look up the
      * key_list in the leaf. */
-    leaf = find_leaf(tree->root_node, key_list);
+    leaf = find_leaf(tree->root_node, kd.key);
     assert(leaf != NULL);
-    return ht_search(leaf->body_table, key_list);
+    assert(leaf->type == LEAF);
+    result = ll_search(leaf->leaf_list, &kd);
+    if (result == NULL)
+        return NULL;
+
+    return result->data;
 }
 
 
 /* Free the hash tree. */
 void tree_free(Hashtree *tree)
 {
-    ht_free(tree->root_node->body_table);
+    if (tree->root_node->type == BODY)
+        ht_free(tree->root_node->body_table);
+    else
+        ll_free(tree->root_node->leaf_list);
     free(tree->root_node);
     ll_free(tree->key_list_type);
     free(tree);
