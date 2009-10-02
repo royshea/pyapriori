@@ -311,6 +311,9 @@ void test_tree_mark_subsets(void **state)
 {
     List *keys;
     List *transaction;
+    List *finger_print;
+    List *tmp;
+    uint16_t i;
     Hashtree *tree;
 
     /* Create a collection of keys. */
@@ -327,11 +330,25 @@ void test_tree_mark_subsets(void **state)
     tree = build_hashtree(keys);
 
     /* Mark keys that are the subset of transaction. */
-    tree_print_uint16(tree);
     transaction = uint16_list_create(5, 1, 2, 3, 5, 6);
     tree_mark_subsets(tree, transaction);
-    tree_print_uint16(tree);
 
+    /* Verify marking.  */
+    tmp = uint16_list_create(6, 1, 0, 0, 1, 0, 0);
+    finger_print = tree_finger_print(tree);
+    assert_int_equal(ll_length(tmp), ll_length(finger_print));
+    for (i = 0; i < ll_length(tmp); i++)
+    {
+        uint16_t expected_count;
+        uint16_t finger_print_count;
+
+        expected_count = *(uint16_t *)ll_get_nth(tmp, i);
+        finger_print_count = *(uint16_t *)ll_get_nth(finger_print, i);
+        assert_int_equal(expected_count, finger_print_count);
+    }
+
+    ll_free(tmp);
+    ll_free(finger_print);
     ll_free(transaction);
     tree_free(tree);
     ll_free(keys);

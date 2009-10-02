@@ -370,6 +370,12 @@ void tree_mark_subsets(Hashtree *tree, List *key_list)
 }
 
 
+/* TODO */
+List *tree_finger_print(Hashtree *tree)
+{
+    return ll_create(tree->data_compare, tree->data_copy, tree->data_free);
+}
+
 /* Helper for tree_print_uint16. */
 static void print_indent(uint8_t depth)
 {
