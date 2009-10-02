@@ -311,8 +311,8 @@ void test_tree_mark_subsets(void **state)
 {
     List *keys;
     List *transaction;
-    List *finger_print;
-    List *tmp;
+    List *fingerprint;
+    List *expected;
     uint16_t i;
     Hashtree *tree;
 
@@ -334,21 +334,21 @@ void test_tree_mark_subsets(void **state)
     tree_mark_subsets(tree, transaction);
 
     /* Verify marking.  */
-    tmp = uint16_list_create(6, 1, 0, 0, 1, 0, 0);
-    finger_print = tree_finger_print(tree);
-    assert_int_equal(ll_length(tmp), ll_length(finger_print));
-    for (i = 0; i < ll_length(tmp); i++)
+    expected = uint16_list_create(6, 0, 0, 1, 0, 0, 1);
+    fingerprint = tree_fingerprint(tree);
+    assert_int_equal(ll_length(expected), ll_length(fingerprint));
+    for (i = 0; i < ll_length(expected); i++)
     {
         uint16_t expected_count;
-        uint16_t finger_print_count;
+        uint16_t fingerprint_count;
 
-        expected_count = *(uint16_t *)ll_get_nth(tmp, i);
-        finger_print_count = *(uint16_t *)ll_get_nth(finger_print, i);
-        assert_int_equal(expected_count, finger_print_count);
+        expected_count = *(uint16_t *)ll_get_nth(expected, i);
+        fingerprint_count = *(uint16_t *)ll_get_nth(fingerprint, i);
+        assert_int_equal(expected_count, fingerprint_count);
     }
 
-    ll_free(tmp);
-    ll_free(finger_print);
+    ll_free(fingerprint);
+    ll_free(expected);
     ll_free(transaction);
     tree_free(tree);
     ll_free(keys);

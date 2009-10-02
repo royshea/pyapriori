@@ -181,7 +181,7 @@ void test_tree_free(void **state)
 }
 
 
-void test_tree_print(void **state)
+void test_tree_print_uint16(void **state)
 {
     Hashtree *tree;
     List *key_list;
@@ -189,33 +189,33 @@ void test_tree_print(void **state)
     tree = tree_create(5, uint16_hash, uint16_list_hash,
             uint16_compare, uint16_copy, uint16_free,
             uint16_compare, uint16_copy, uint16_free);
-    tree_print(tree);
+    tree_print_uint16(tree);
 
     key_list = uint16_list_create(3, 0, 1, 2);
     tree_insert(tree, key_list, make_count(1));
-    tree_print(tree);
+    tree_print_uint16(tree);
 
     key_list = uint16_list_create(3, 1, 2, 3);
     tree_insert(tree, key_list, make_count(1));
-    tree_print(tree);
+    tree_print_uint16(tree);
 
     key_list = uint16_list_create(3, 0, 1, 3);
     tree_insert(tree, key_list, make_count(1));
-    tree_print(tree);
+    tree_print_uint16(tree);
 
     key_list = uint16_list_create(3, 1, 1, 3);
     tree_insert(tree, key_list, make_count(1));
-    tree_print(tree);
+    tree_print_uint16(tree);
 
     key_list = uint16_list_create(3, 1, 1, 1);
     tree_insert(tree, key_list, make_count(1));
-    tree_print(tree);
+    tree_print_uint16(tree);
 
     /* Assuming a node threshold of 5, this insertion cases the root
      * node to be expanded. */
     key_list = uint16_list_create(3, 3, 1, 1);
     tree_insert(tree, key_list, make_count(1));
-    tree_print(tree);
+    tree_print_uint16(tree);
 
     /* Clean up. */
     tree_free(tree);
@@ -228,7 +228,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_tree_insert),
         unit_test(test_tree_search),
         unit_test(test_tree_free),
-        /*unit_test(test_tree_print),*/
+        /*unit_test(test_tree_print_uint16),*/
     };
     return run_tests(tests);
 }

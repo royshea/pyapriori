@@ -370,11 +370,55 @@ void tree_mark_subsets(Hashtree *tree, List *key_list)
 }
 
 
-/* TODO */
-List *tree_finger_print(Hashtree *tree)
+/* Helper function for tree_fingerprint. */
+static void tree_fingerprint_helper(TreeNode *node, List *fingerprint)
 {
-    return ll_create(tree->data_compare, tree->data_copy, tree->data_free);
+    uint16_t i;
+    uint16_t j;
+
+    if (node->type == LEAF)
+    {
+        for (i = 0; i < ll_length(node->leaf_list); i++)
+        {
+            KeyData *kd;
+            void *data;
+
+            kd = ll_get_nth(node->leaf_list, i);
+            data = node->parent_tree->data_copy(kd->data);
+            ll_push(fingerprint, data);
+        }
+    }
+    else
+    {
+        for (i=0; i<node->body_table->size; i++)
+        {
+            List *bucket;
+            bucket = node->body_table->buckets[i];
+
+            for (j = 0; j < ll_length(bucket); j++)
+            {
+                Entry *e;
+                e = (Entry *)ll_get_nth(bucket, j);
+                tree_fingerprint_helper(e->entry_data, fingerprint);
+            }
+        }
+    }
 }
+
+
+/* Construct the data "fingerprint" for the hash tree.  This finger
+ * print is a list of the data at all of the tree leafs. */
+List *tree_fingerprint(Hashtree *tree)
+{
+    List *fingerprint;
+
+    fingerprint = ll_create(tree->data_compare, tree->data_copy,
+            tree->data_free);
+    tree_fingerprint_helper(tree->root_node, fingerprint);
+
+    return fingerprint;
+}
+
 
 /* Helper for tree_print_uint16. */
 static void print_indent(uint8_t depth)
@@ -383,6 +427,7 @@ static void print_indent(uint8_t depth)
         printf("  ");
     return;
 }
+
 
 /* Helper for tree_print_uint16. */
 static void leaf_node_print_uint16(TreeNode *node)

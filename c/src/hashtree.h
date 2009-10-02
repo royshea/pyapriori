@@ -31,7 +31,7 @@ void tree_free(Hashtree *tree);
 
 void tree_mark_subsets(Hashtree *tree, List *key_list);
 
-List *tree_finger_print(Hashtree *tree);
+List *tree_fingerprint(Hashtree *tree);
 
 void tree_print_uint16(Hashtree *tree);
 
