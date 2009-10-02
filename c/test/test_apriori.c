@@ -355,6 +355,50 @@ void test_tree_mark_subsets(void **state)
 }
 
 
+void test_tree_extract_frequent(void **state)
+{
+    List *keys;
+    List *transaction;
+    List *frequent;
+    List *key;
+    Hashtree *tree;
+
+    /* Create a collection of keys. */
+    keys = ll_create(uint16_list_compare, uint16_list_copy,
+            uint16_list_free);
+    ll_push_tail(keys, uint16_list_create(3, 1, 2, 3));
+    ll_push_tail(keys, uint16_list_create(3, 1, 2, 4));
+    ll_push_tail(keys, uint16_list_create(3, 1, 3, 4));
+    ll_push_tail(keys, uint16_list_create(3, 1, 3, 5));
+    ll_push_tail(keys, uint16_list_create(3, 2, 3, 4));
+    ll_push_tail(keys, uint16_list_create(3, 2, 4, 5));
+
+    /* Encode keys in a hash table. */
+    tree = build_hashtree(keys);
+
+    /* Mark keys that are the subset of transaction. */
+    transaction = uint16_list_create(5, 1, 2, 3, 5, 6);
+    tree_mark_subsets(tree, transaction);
+
+    /* Extract frequent keys. */
+    frequent = tree_extract_frequent(tree, 1);
+    assert_int_equal(ll_length(frequent), 2);
+
+    key = uint16_list_create(3, 1, 2, 3);
+    assert_true(ll_search(frequent, key) != NULL);
+    ll_free(key);
+
+    key = uint16_list_create(3, 1, 3, 5);
+    assert_true(ll_search(frequent, key) != NULL);
+    ll_free(key);
+
+    ll_free(frequent);
+    ll_free(transaction);
+    tree_free(tree);
+    ll_free(keys);
+}
+
+
 int main(int argc, char* argv[]) {
     const UnitTest tests[] = {
         unit_test(test_read_uint16_list),
@@ -364,6 +408,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_generate_candidate_sets_b),
         unit_test(test_build_hashtree),
         unit_test(test_tree_mark_subsets),
+        unit_test(test_tree_extract_frequent),
     };
     return run_tests(tests);
 }

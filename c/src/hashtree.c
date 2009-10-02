@@ -4,6 +4,9 @@
 
 #include "hashtree_private.h"
 
+/* See TODOs is code reguarding functions in this header. */
+#include "uint16_list.h"
+
 /* NOTE: See other NOTEs within this program on advice about removing
  * these includes. */
 #include "hashtable_private.h"
@@ -32,7 +35,7 @@ static void *key_data_copy(void *key_data)
 
     kd = (KeyData *)key_data;
     copy = malloc(sizeof(KeyData));
-    copy->key = kd->parent_tree->key_copy(kd->key);
+    copy->key = ll_copy(kd->key);
     copy->data = kd->parent_tree->data_copy(kd->data);
     copy->parent_tree = kd->parent_tree;
 
@@ -367,6 +370,61 @@ static void mark_subsets_helper(TreeNode *node, List *key_list,
 void tree_mark_subsets(Hashtree *tree, List *key_list)
 {
     mark_subsets_helper(tree->root_node, key_list, 0);
+}
+
+
+/* Helper for tree_extract_frequent. */
+void tree_extract_frequent_helper(TreeNode *node, List *frequent, uint16_t min_count)
+{
+    uint16_t i;
+    uint16_t j;
+
+    if (node->type == LEAF)
+    {
+        for (i = 0; i < ll_length(node->leaf_list); i++)
+        {
+            KeyData *kd;
+
+            kd = ll_get_nth(node->leaf_list, i);
+            if (*(uint16_t *)kd->data >= min_count)
+            {
+                List *key_list;
+
+                key_list = ll_copy(kd->key);
+                ll_push(frequent, key_list);
+            }
+        }
+    }
+    else
+    {
+        for (i=0; i<node->body_table->size; i++)
+        {
+            List *bucket;
+            bucket = node->body_table->buckets[i];
+
+            for (j = 0; j < ll_length(bucket); j++)
+            {
+                Entry *e;
+                e = (Entry *)ll_get_nth(bucket, j);
+                tree_extract_frequent_helper(e->entry_data, frequent, min_count);
+            }
+        }
+    }
+}
+
+
+/* Extract frequent keys from a hashtree where nodes store a KeyData
+ * node whose data field is a frequency count stored as a uint16_t . */
+List *tree_extract_frequent(Hashtree *tree, uint16_t min_count)
+{
+    List *frequent;
+
+    /* TODO: Clean this up to work for more generic data types. */
+    frequent = ll_create(uint16_list_compare, uint16_list_copy,
+            uint16_list_free);
+    tree_extract_frequent_helper(tree->root_node, frequent, min_count);
+
+    return frequent;
 }
 
 
