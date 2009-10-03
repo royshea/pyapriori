@@ -194,7 +194,7 @@ List *generate_frequent_size_one(List *stream, List *transactions,
     uint16_t stream_index;
     uint16_t *unique_val;
 
-    min_support = support_ratio * ll_length(stream);
+    min_support = support_ratio * ll_length(transactions);
     assert(min_support > 0);
 
     unique_elements = ll_create(uint16_compare, uint16_copy, uint16_free);
@@ -217,22 +217,25 @@ List *generate_frequent_size_one(List *stream, List *transactions,
     }
 
     /* Count the number of times each unique element occures within
-     * stream.  If this is greater than or equal to the min_support,
+     * a transaction.  If this is greater than or equal to the min_support,
      * then add the unique element to the size_one list. */
     for (unique_val = ll_pop(unique_elements); unique_val != NULL;
             unique_val = ll_pop(unique_elements))
     {
         uint16_t support_count;
-        uint16_t stream_index;
+        uint16_t transaction_index;
 
         /* Count the number of transactions involving unique_val. */
         support_count = 0;
-        for (stream_index=0; stream_index<ll_length(stream);
-                stream_index++)
+        for (transaction_index=0;
+                transaction_index<ll_length(transactions);
+                transaction_index++)
         {
-            if (*unique_val == *(uint16_t *)ll_get_nth(stream, stream_index))
-                support_count += 1;
+            List *transaction;
 
+            transaction = ll_get_nth(transactions, transaction_index);
+            if (ll_search(transaction, unique_val) != NULL)
+                support_count += 1;
         }
 
         /* Store unique_val in size_one if it has enough support. */
@@ -317,9 +320,78 @@ List *read_uint16_list(char *file_name)
             free(data);
             break;
         }
+
+        /* If something has gone wrong, clean up (for testing) and abort. */
+        if (read_count != 1)
+        {
+            free(data);
+            ll_free(list);
+            assert(read_count == 1);
+        }
+
         ll_push(list, data);
     }
     fclose(fid);
 
     return list;
+}
+
+
+List *apriori(char *file_name, uint8_t transaction_width,
+        float support_ratio)
+{
+    List *trace;
+    List *transactions;
+    List *size_n_frequent;
+    List *frequent;
+    uint16_t min_support_count;
+
+    /* Read in the data. */
+    trace = read_uint16_list(file_name);
+
+    /* Use a sliding window to generate small "transactions" from the
+     * data stream. */
+    transactions = make_transactions_fixed_width(trace, transaction_width);
+    min_support_count = support_ratio * ll_length(transactions);
+
+    /* Generate the size one frequent sets and store a copy in frequent. */
+    size_n_frequent = generate_frequent_size_one(trace, transactions,
+            support_ratio);
+    frequent = ll_copy(size_n_frequent);
+    ll_free(trace);
+
+    /* Iteratively generate the size n+1 frequent sets.  Store all
+     * frequent sets in frequent.  Iterate until no larger sets are
+     * generated. */
+    while (ll_length(size_n_frequent) != 0)
+    {
+        List *candidates;
+        List *tmp_copy;
+        Hashtree *candidate_tree;
+
+        /* Size n+1 candidate sets. */
+        candidates = generate_candidate_sets(size_n_frequent);
+        ll_free(size_n_frequent);
+
+        /* Put into a hash tree. */
+        candidate_tree = build_hashtree(candidates);
+        ll_free(candidates);
+
+        /* Count frequencies and extract frequent candidate sets. */
+        tree_mark_subsets(candidate_tree, transactions);
+        size_n_frequent = tree_extract_frequent(candidate_tree,
+                min_support_count);
+        tree_free(candidate_tree);
+
+        /* Copy frequent candidate sets into frequent. */
+        tmp_copy = ll_copy(size_n_frequent);
+        while (ll_length(tmp_copy) > 0)
+            ll_push(frequent, ll_pop(tmp_copy));
+        ll_free(tmp_copy);
+    }
+
+    ll_free(size_n_frequent);
+    ll_free(transactions);
+
+    return frequent;
 }

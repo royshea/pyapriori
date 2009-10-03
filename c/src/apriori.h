@@ -29,4 +29,8 @@ List *make_transactions_fixed_width(List *stream, uint8_t width);
 List *read_uint16_list(char *file_name);
 
 
+/* Implementation of the Apriori algorithm. */
+List *apriori(char *file_name, uint8_t transaction_width, float
+        support_ratio);
+
 #endif /*APRIORI_*/

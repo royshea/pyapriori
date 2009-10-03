@@ -49,5 +49,8 @@ List *uint16_list_create(uint16_t length, ...);
 /* Print out a list of uint16_t data. */
 void uint16_list_print(List *list);
 
+/* Print out a list of uint16_t lists. */
+void uint16_list_list_print(List *list);
+
 
 #endif /*UINT16_LIST_*/

@@ -112,3 +112,13 @@ void uint16_list_print(List *list)
         printf("%d ", *(uint16_t *)ll_get_nth(list, i));
     printf("\n");
 }
+
+
+/* Print out a list of uint16_t lists. */
+void uint16_list_list_print(List *list)
+{
+    uint16_t i;
+
+    for (i=0; i<ll_length(list); i++)
+        uint16_list_print(ll_get_nth(list, i));
+}

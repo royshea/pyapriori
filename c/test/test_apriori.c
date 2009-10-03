@@ -28,6 +28,7 @@ void test_read_uint16_list(void **state)
     fprintf(fid, "0 1 2 3");
     fclose(fid);
     list = read_uint16_list(tmp_file_name);
+    remove(tmp_file_name);
     assert_int_equal(ll_length(list), 4);
     ll_sort(list);
     for (i=0; i<4; i++)
@@ -43,6 +44,7 @@ void test_read_uint16_list(void **state)
     fprintf(fid, "   0\t 1\n2 3  ");
     fclose(fid);
     list = read_uint16_list(tmp_file_name);
+    remove(tmp_file_name);
     assert_int_equal(ll_length(list), 4);
     ll_sort(list);
     for (i=0; i<4; i++)
@@ -53,6 +55,21 @@ void test_read_uint16_list(void **state)
     }
     ll_free(list);
 
+    /* Testing types of invalid data.
+     *
+     * NOTE: Current implementation fails to recognize out of range
+     * positive or negative integers.
+     */
+    fid = fopen(tmp_file_name, "w");
+    fprintf(fid, "0 3.14 2 3");
+    fclose(fid);
+    expect_assert_failure(read_uint16_list(tmp_file_name));
+    remove(tmp_file_name);
+
+    fid = fopen(tmp_file_name, "w");
+    fprintf(fid, "0 a 2 3");
+    fclose(fid);
+    expect_assert_failure(read_uint16_list(tmp_file_name));
     remove(tmp_file_name);
 }
 
@@ -135,42 +152,42 @@ void test_generate_frequent_size_one(void **state)
     expect_assert_failure(generate_frequent_size_one(stream,
                 transactions, 0));
 
-    size_one = generate_frequent_size_one(stream, transactions, .02);
+    size_one = generate_frequent_size_one(stream, transactions, .025 * 3);
     assert_int_equal(ll_length(size_one), 6);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 0);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .04);
+    size_one = generate_frequent_size_one(stream, transactions, .045 * 3);
     assert_int_equal(ll_length(size_one), 5);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 1);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .06);
+    size_one = generate_frequent_size_one(stream, transactions, .065 * 3);
     assert_int_equal(ll_length(size_one), 4);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 2);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .08);
+    size_one = generate_frequent_size_one(stream, transactions, .085 * 3);
     assert_int_equal(ll_length(size_one), 3);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 3);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .10);
+    size_one = generate_frequent_size_one(stream, transactions, .105 * 3);
     assert_int_equal(ll_length(size_one), 2);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 4);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .12);
+    size_one = generate_frequent_size_one(stream, transactions, .125 * 3);
     assert_int_equal(ll_length(size_one), 1);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
@@ -399,6 +416,64 @@ void test_tree_extract_frequent(void **state)
 }
 
 
+/* The full monty. */
+void test_apriori(void **state)
+{
+    FILE *fid;
+    List *frequent;
+    float ratio;
+
+    /* Calculate frequent sets for an input file. */
+    fid = fopen(tmp_file_name, "w");
+    fprintf(fid, "1 1 2 3 5 8 1 3");
+    fclose(fid);
+
+    ratio = 1.0;
+    frequent = apriori(tmp_file_name, 4, ratio);
+    printf("Printing list for ratio %1.02f...\n", ratio);
+    uint16_list_list_print(frequent);
+    printf("Printing done...\n");
+    assert(ll_length(frequent) == 1);
+    ll_free(frequent);
+
+    /*
+    ratio = 0.8;
+    frequent = apriori(tmp_file_name, 4, ratio);
+    printf("Printing list for ratio %1.02f...\n", ratio);
+    uint16_list_list_print(frequent);
+    printf("Printing done...\n");
+    assert(ll_length(frequent) == 5);
+    ll_free(frequent);
+
+    ratio = 0.6;
+    frequent = apriori(tmp_file_name, 4, ratio);
+    printf("Printing list for ratio %1.02f...\n", ratio);
+    uint16_list_list_print(frequent);
+    printf("Printing done...\n");
+    assert(ll_length(frequent) == 14);
+    ll_free(frequent);
+
+    ratio = 0.4;
+    frequent = apriori(tmp_file_name, 4, ratio);
+    printf("Printing list for ratio %1.02f...\n", ratio);
+    uint16_list_list_print(frequent);
+    printf("Printing done...\n");
+    assert(ll_length(frequent) == 20);
+    ll_free(frequent);
+
+    ratio = 0.2;
+    frequent = apriori(tmp_file_name, 4, ratio);
+    printf("Printing list for ratio %1.02f...\n", ratio);
+    uint16_list_list_print(frequent);
+    printf("Printing done...\n");
+    assert(ll_length(frequent) == 32);
+    ll_free(frequent);
+    */
+
+    remove(tmp_file_name);
+}
+
+
 int main(int argc, char* argv[]) {
     const UnitTest tests[] = {
         unit_test(test_read_uint16_list),
@@ -409,6 +484,7 @@ int main(int argc, char* argv[]) {
         unit_test(test_build_hashtree),
         unit_test(test_tree_mark_subsets),
         unit_test(test_tree_extract_frequent),
+        unit_test(test_apriori),
     };
     return run_tests(tests);
 }
