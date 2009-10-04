@@ -428,47 +428,41 @@ void test_apriori(void **state)
     fprintf(fid, "1 1 2 3 5 8 1 3");
     fclose(fid);
 
+    /* Verbose output for this testing can be enabled using the
+     * following code:
+     *
+     * printf("Printing list for ratio %1.02f...\n", ratio);
+     * uint16_list_list_print(frequent);
+     * printf("Printing done...\n");
+     *
+     * Other useful functions for examining internal system state incude
+     * uint16_list_print(List *), tree_print_uint16(Hashtree *), and
+     * node_print_uint16(TreeNode *). */
+
     ratio = 1.0;
     frequent = apriori(tmp_file_name, 4, ratio);
-    printf("Printing list for ratio %1.02f...\n", ratio);
-    uint16_list_list_print(frequent);
-    printf("Printing done...\n");
     assert(ll_length(frequent) == 1);
     ll_free(frequent);
 
-    /*
     ratio = 0.8;
     frequent = apriori(tmp_file_name, 4, ratio);
-    printf("Printing list for ratio %1.02f...\n", ratio);
-    uint16_list_list_print(frequent);
-    printf("Printing done...\n");
     assert(ll_length(frequent) == 5);
     ll_free(frequent);
 
     ratio = 0.6;
     frequent = apriori(tmp_file_name, 4, ratio);
-    printf("Printing list for ratio %1.02f...\n", ratio);
-    uint16_list_list_print(frequent);
-    printf("Printing done...\n");
     assert(ll_length(frequent) == 14);
     ll_free(frequent);
 
     ratio = 0.4;
     frequent = apriori(tmp_file_name, 4, ratio);
-    printf("Printing list for ratio %1.02f...\n", ratio);
-    uint16_list_list_print(frequent);
-    printf("Printing done...\n");
-    assert(ll_length(frequent) == 20);
+    assert(ll_length(frequent) == 21);
     ll_free(frequent);
 
     ratio = 0.2;
     frequent = apriori(tmp_file_name, 4, ratio);
-    printf("Printing list for ratio %1.02f...\n", ratio);
-    uint16_list_list_print(frequent);
-    printf("Printing done...\n");
-    assert(ll_length(frequent) == 32);
+    assert(ll_length(frequent) == 27);
     ll_free(frequent);
-    */
 
     remove(tmp_file_name);
 }

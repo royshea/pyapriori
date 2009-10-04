@@ -289,7 +289,8 @@ List *make_transactions_fixed_width(List *stream, uint8_t width)
             ll_push(sublist, data);
         }
 
-        /* Add sublist to the set of transactions. */
+        /* Add sorted sublist to the set of transactions. */
+        ll_sort(sublist);
         ll_push(transaction_list, sublist);
     }
 
@@ -368,6 +369,8 @@ List *apriori(char *file_name, uint8_t transaction_width,
         List *candidates;
         List *tmp_copy;
         Hashtree *candidate_tree;
+        List *transaction;
+        uint16_t i;
 
         /* Size n+1 candidate sets. */
         candidates = generate_candidate_sets(size_n_frequent);
@@ -378,7 +381,11 @@ List *apriori(char *file_name, uint8_t transaction_width,
         ll_free(candidates);
 
         /* Count frequencies and extract frequent candidate sets. */
-        tree_mark_subsets(candidate_tree, transactions);
+        for (i = 0; i < ll_length(transactions); i++)
+        {
+            transaction = ll_get_nth(transactions, i);
+            tree_mark_subsets(candidate_tree, transaction);
+        }
         size_n_frequent = tree_extract_frequent(candidate_tree,
                 min_support_count);
         tree_free(candidate_tree);

@@ -15,7 +15,6 @@
 #include "../test/unit_testing.h"
 #endif /* UNIT_TESTING */
 
-
 /* Sort based on the keys in a key data tuple. */
 static int16_t key_data_compare(void *key_data_a, void *key_data_b)
 {
@@ -329,7 +328,6 @@ static void mark_subsets_helper(TreeNode *node, List *key_list,
             if (ll_is_subset_of(key_list, kd->key))
                 *(uint16_t *)kd->data += 1;
         }
-
     }
     else
     {
@@ -345,10 +343,11 @@ static void mark_subsets_helper(TreeNode *node, List *key_list,
             key = ll_get_nth(key_list, i);
             next_node = ht_search(node->body_table, key);
 
+
             if (next_node == NULL)
                 return;
             else
-                mark_subsets_helper(next_node, key_list, i);
+                mark_subsets_helper(next_node, key_list, i+1);
         }
     }
     return;
