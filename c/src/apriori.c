@@ -286,7 +286,13 @@ List *make_transactions_fixed_width(List *stream, uint8_t width)
             uint16_t *data;
             data = malloc(sizeof(uint16_t));
             *data = *(uint16_t *)ll_get_nth(stream, stream_index + window_index);
-            ll_push(sublist, data);
+
+            /* Apriori works with sets of data.  So repeated information
+             * is eleminated from the set. */
+            if (ll_search(sublist, data) == NULL)
+                ll_push(sublist, data);
+            else
+                free(data);
         }
 
         /* Add sorted sublist to the set of transactions. */

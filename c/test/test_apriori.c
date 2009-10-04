@@ -81,7 +81,7 @@ void test_make_transactions_fixed_width(void **state)
     List *sublist;
     List *tmp;
 
-    stream = uint16_list_create(10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    stream = uint16_list_create(10, 0, 1, 2, 3, 4, 5, 6, 7, 9, 8);
 
     /* Verify failure of creating size 0 transactions. */
     expect_assert_failure(make_transactions_fixed_width(stream, 0));
@@ -90,22 +90,47 @@ void test_make_transactions_fixed_width(void **state)
     transactions = make_transactions_fixed_width(stream, 3);
     assert_int_equal(ll_length(transactions), 8);
 
+    /* Verify that the transactions are correctly generated.  This sort
+     * ensures that the transactions are sorted for easy easy indexing.
+     * But it assumes (and testes) that individual transactions are
+     * sorted.  When returned by make_transactions_fixed_width. */
     ll_sort(transactions);
 
     tmp = ll_get_nth(transactions, 0);
-    ll_sort(tmp);
     sublist = uint16_list_create(3, 0, 1, 2);
     assert_int_equal(ll_list_compare(sublist, tmp), 0);
     ll_free(sublist);
 
     tmp = ll_get_nth(transactions, 7);
-    ll_sort(tmp);
     sublist = uint16_list_create(3, 7, 8, 9);
     assert_int_equal(ll_list_compare(sublist, tmp), 0);
     ll_free(sublist);
 
     ll_free(transactions);
     ll_free(stream);
+
+    /* Verify that transactions are correctly formed, and thus do not
+     * have repeated elements. */
+    stream = uint16_list_create(5, 0, 0, 0, 0, 1);
+    transactions = make_transactions_fixed_width(stream, 4);
+    assert_int_equal(ll_length(transactions), 2);
+
+    ll_sort(transactions);
+
+    tmp = ll_get_nth(transactions, 0);
+    sublist = uint16_list_create(1, 0);
+    assert_int_equal(ll_list_compare(sublist, tmp), 0);
+    ll_free(sublist);
+
+    tmp = ll_get_nth(transactions, 1);
+    sublist = uint16_list_create(2, 0, 1);
+    assert_int_equal(ll_list_compare(sublist, tmp), 0);
+    ll_free(sublist);
+
+
+    ll_free(transactions);
+    ll_free(stream);
+
 }
 
 
@@ -451,7 +476,7 @@ void test_apriori(void **state)
 
     ratio = 0.6;
     frequent = apriori(tmp_file_name, 4, ratio);
-    assert(ll_length(frequent) == 14);
+    assert(ll_length(frequent) == 13);
     ll_free(frequent);
 
     ratio = 0.4;
