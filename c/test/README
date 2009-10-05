@@ -1,0 +1,48 @@
+The main apriori test uses as input the following stream of IDs to
+create transactions of length four:
+
+1 1 2 3 5 8 1 3
+
+This results in the following five transactions:
+
+1 1 2 3
+1 2 3 5
+2 3 5 8
+3 5 8 1
+5 8 1 3
+
+The first transaction is reduced to a four element set due to the
+repeated digit "1".
+
+The last two transactions are equivalent, since the order of elements in
+a transaction does not matter.
+
+This set of transactions generates the following subset counts:
+
+1 -> 4
+2 -> 3
+3 -> 5
+5 -> 4
+8 -> 3
+1 2 -> 2
+1 3 -> 4
+1 5 -> 3
+1 8 -> 2
+2 3 -> 3
+2 5 -> 2
+2 8 -> 1
+3 5 -> 4
+3 8 -> 3
+5 8 -> 3
+1 2 3 -> 2
+1 2 5 -> 1
+1 3 5 -> 3
+1 3 8 -> 2
+1 5 8 -> 2 
+2 3 5 -> 2
+2 3 8 -> 1
+2 5 8 -> 1
+3 5 8 -> 3
+1 2 3 5 -> 1
+2 3 5 8 -> 1
+1 3 5 8 -> 2
