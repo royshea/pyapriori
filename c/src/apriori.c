@@ -191,7 +191,8 @@ List *generate_frequent_size_one(List *stream, List *transactions,
 {
     List *unique_elements;
     List *size_one;
-    uint16_t stream_index;
+    List *tmp_copy;
+    uint16_t *stream_item;
     uint16_t *unique_val;
 
     assert(min_support_count > 0);
@@ -200,44 +201,42 @@ List *generate_frequent_size_one(List *stream, List *transactions,
     size_one = ll_create(uint16_list_compare, uint16_list_copy,
             uint16_list_free);
 
-    /* Iterate through stream generate a list of unique values. */
-    for (stream_index=0; stream_index<ll_length(stream); stream_index++)
+    /* Iterate through a stream of uint16_t* and generates a list of
+     * unique values. */
+    tmp_copy = ll_copy(stream);
+    for (stream_item = ll_pop(tmp_copy); stream_item != NULL;
+            stream_item = ll_pop(tmp_copy))
     {
-        uint16_t *tmp;
 
-        tmp = ll_get_nth(stream, stream_index);
-        if (ll_search(unique_elements, tmp) == NULL)
-        {
-            uint16_t *data;
-            data = malloc(sizeof(uint16_t));
-            *data = *tmp;
-            ll_push(unique_elements, data);
-        }
+        if (ll_search(unique_elements, stream_item) == NULL)
+            ll_push(unique_elements, stream_item);
+        else
+            free(stream_item);
     }
+    ll_free(tmp_copy);
+
 
     /* Count the number of times each unique element occures within a
      * transaction.  If this is greater than or equal to the
      * min_support_count, then add the unique element to the size_one
      * list. */
-
     for (unique_val = ll_pop(unique_elements); unique_val != NULL;
             unique_val = ll_pop(unique_elements))
     {
         uint16_t support_count;
-        uint16_t transaction_index;
+        List *transaction;
 
         /* Count the number of transactions involving unique_val. */
         support_count = 0;
-        for (transaction_index=0;
-                transaction_index<ll_length(transactions);
-                transaction_index++)
+        tmp_copy = ll_copy(transactions);
+        for (transaction = ll_pop(tmp_copy); transaction != NULL;
+                transaction = ll_pop(tmp_copy))
         {
-            List *transaction;
-
-            transaction = ll_get_nth(transactions, transaction_index);
             if (ll_search(transaction, unique_val) != NULL)
                 support_count += 1;
+            ll_free(transaction);
         }
+        ll_free(tmp_copy);
 
         /* Store unique_val in size_one if it has enough support. */
         if (support_count >= min_support_count)
