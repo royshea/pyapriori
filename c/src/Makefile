@@ -6,6 +6,7 @@
 ####
 SOURCES = linked_list.c hashtable.c hashtree.c apriori.c uint16_list.c
 OBJECTS = $(SOURCES:.c=.o)
+LIBS = -L. -lapriori
 CFLAGS += -g -Wall -pedantic
 
 
@@ -36,11 +37,20 @@ endif
 # Target specific default rules.  Explicit clean is added to keep builds
 # of different architectures clean.
 ####
-all: clean $(LIB)
+all: clean $(LIB) use_apriori
 
 msp430: clean $(LIB)
 
 avr: clean $(LIB)
+
+
+####
+# Executable wrapping apriori
+####
+
+use_apriori: use_apriori.o
+	$(CC) $(CFLAGS) $< -o $@ $(LIBS)
+
 
 
 ####
