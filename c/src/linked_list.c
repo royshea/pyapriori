@@ -237,36 +237,28 @@ int16_t ll_list_compare(void *list_blob_a, void *list_blob_b)
 {
     List *list_a;
     List *list_b;
-    uint16_t length_a;
-    uint16_t length_b;
-    uint16_t i;
+    Node *node_a;
+    Node *node_b;
 
     /* Cast to correct data type. */
     list_a = (List *)list_blob_a;
     list_b = (List *)list_blob_b;
 
-    /* Number of keys in each list. */
-    length_a = ll_length(list_a);
-    length_b = ll_length(list_b);
-
     /* Compare pairwise elements of the key lists. */
-    for (i=0; i<length_a && i<length_b; i++)
+    node_a = list_a->head;
+    node_b = list_b->head;
+    while (node_a != NULL && node_b != NULL)
     {
-        void *data_a;
-        void *data_b;
         int16_t cmp;
 
-        data_a = ll_get_nth(list_a, i);
-        data_b = ll_get_nth(list_b, i);
-
-        /* TODO: Acessor function to the compare operator?  That way we
-         * don't require internal linked list structure information.
-         * Although I'm not sure if that would work correctly... */
-        cmp = list_a->data_compare(data_a, data_b);
+        cmp = list_a->data_compare(node_a->node_data, node_b->node_data);
         if (cmp != 0) return cmp;
+
+        node_a = node_a->next;
+        node_b = node_b->next;
     }
 
-    return length_a - length_b;
+    return ll_length(list_a) - ll_length(list_b);
 }
 
 
