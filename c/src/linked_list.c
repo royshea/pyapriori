@@ -223,6 +223,7 @@ void ll_sort(List *list)
      * original list. */
     list->head = merged_list->head;
     list->tail = merged_list->tail;
+    list->length = merged_list->length;
     merged_list->head = NULL;
     merged_list->tail = NULL;
     free(merged_list);
