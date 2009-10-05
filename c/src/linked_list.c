@@ -20,6 +20,7 @@ List* ll_create(int16_t(*data_compare)(void *,void *),
 
     list->head = NULL;
     list->tail = NULL;
+    list->length = 0;
     list->data_compare = data_compare;
     list->data_copy = data_copy;
     list->data_free = data_free;
@@ -41,6 +42,9 @@ void ll_push(List *list, void *data)
     /* Special case to update tail when the list was empty. */
     if (list->tail == NULL)
         list->tail = new_head;
+
+    list->length += 1;
+    return;
 }
 
 
@@ -62,6 +66,9 @@ void ll_push_tail(List *list, void *data)
         list->tail->next = new_tail;
 
     list->tail = new_tail;
+
+    list->length += 1;
+    return;
 }
 
 
@@ -83,20 +90,14 @@ void* ll_pop(List *list)
     if (list->tail == old_head)
         list->tail = NULL;
 
+    list->length -= 1;
     return data;
 }
 
 
 uint16_t ll_length(List *list)
 {
-    uint16_t count;
-    Node *current;
-
-    count = 0;
-    for (current = list->head; current != NULL; current = current->next)
-        count += 1;
-
-    return count;
+    return list->length;
 }
 
 
@@ -338,6 +339,7 @@ void* ll_remove(List *list, void* data)
     {
         match = matched_node->node_data;
         free(matched_node);
+        list->length -= 1;
         return match;
     }
 

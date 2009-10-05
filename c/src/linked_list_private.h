@@ -25,6 +25,7 @@ struct _ll_list
     /* Head of the linked list. */
     Node *head;
     Node *tail;
+    uint16_t length;
 
     /* Functions for manipulating list entries. */
     int16_t (*data_compare)(void *,void *);
