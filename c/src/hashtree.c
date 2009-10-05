@@ -31,7 +31,7 @@
 
 #include "hashtree_private.h"
 
-/* See TODOs is code reguarding functions in this header. */
+/* See TODOs is code regarding functions in this header. */
 #include "uint16_list.h"
 
 /* NOTE: See other NOTEs within this program on advice about removing
@@ -360,7 +360,7 @@ static void mark_subsets_helper(TreeNode *node, List *key_list,
     {
         uint8_t i;
 
-        /* Recursivly mark_subsets for subsequent key values. */
+        /* Recursively mark_subsets for subsequent key values. */
         for (i = key_index; i < ll_length(key_list); i++)
         {
             void *key;

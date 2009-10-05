@@ -52,7 +52,7 @@ List *generate_frequent_size_one(List *stream, List *transactions,
 List *make_transactions_fixed_width(List *stream, uint8_t width);
 
 
-/* Read in uint16_t data from a white space seperated data file. */
+/* Read in uint16_t data from a white space separated data file. */
 List *read_uint16_list(char *file_name);
 
 

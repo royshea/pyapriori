@@ -32,7 +32,7 @@
 #include "linked_list.h"
 
 
-/* Prime recomendations from Aaron Krowne
+/* Prime recommendations from Aaron Krowne
  * http://planetmath.org/encyclopedia/GoodHashTablePrimes.html */
 static const uint16_t prime_table_size[] =
 {

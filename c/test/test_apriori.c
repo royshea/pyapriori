@@ -176,8 +176,8 @@ void test_generate_frequent_size_one(void **state)
      * 3 -> 4x
      * 4 -> 5x
      * 9 -> a lot
-     * The value 9 is used to seperate the numbers 1-4 so that each only
-     * occures in its own isolated window of size 3.
+     * The value 9 is used to separate the numbers 1-4 so that each only
+     * occurs in its own isolated window of size 3.
      */
     stream = uint16_list_create(17 * 3,
             9, 9, 9,
@@ -337,7 +337,7 @@ void test_generate_candidate_sets_b(void **state)
     ll_push_tail(candidates, uint16_list_create(3, 1, 3, 5));
     ll_push_tail(candidates, uint16_list_create(3, 2, 3, 4));
 
-    /* Calculate candidate sets.  Expeting (1,2,3,4).  The set (1,3,4,5)
+    /* Calculate candidate sets.  Expecting (1,2,3,4).  The set (1,3,4,5)
      * should be pruned since the subset of it (1,4,5) and others are
      * not in the candidates. */
     tmp = generate_candidate_sets(candidates);
@@ -494,7 +494,7 @@ void test_apriori(void **state)
      * uint16_list_list_print(frequent);
      * printf("Printing done...\n");
      *
-     * Other useful functions for examining internal system state incude
+     * Other useful functions for examining internal system state include
      * uint16_list_print(List *), tree_print_uint16(Hashtree *), and
      * node_print_uint16(TreeNode *). */
 

@@ -206,7 +206,7 @@ List *generate_candidate_sets(List *prior_sets)
 }
 
 
-/* Generate the set of size 1 transactions with minium support greater
+/* Generate the set of size 1 transactions with minimum support greater
  * than the specified support ratio.  The members of the resulting list
  * are each stored as a list of length one.  This results in the same
  * structure being used here as later when sets are of length greater
@@ -243,7 +243,7 @@ List *generate_frequent_size_one(List *stream, List *transactions,
     ll_free(tmp_copy);
 
 
-    /* Count the number of times each unique element occures within a
+    /* Count the number of times each unique element occurs within a
      * transaction.  If this is greater than or equal to the
      * min_support_count, then add the unique element to the size_one
      * list. */
@@ -315,7 +315,7 @@ List *make_transactions_fixed_width(List *stream, uint8_t width)
             *data = *(uint16_t *)ll_get_nth(stream, stream_index + window_index);
 
             /* Apriori works with sets of data.  So repeated information
-             * is eleminated from the set. */
+             * is eliminated from the set. */
             if (ll_search(sublist, data) == NULL)
                 ll_push(sublist, data);
             else
@@ -331,7 +331,7 @@ List *make_transactions_fixed_width(List *stream, uint8_t width)
 }
 
 
-/* Read in uint16_t data from a white space seperated data file. */
+/* Read in uint16_t data from a white space separated data file. */
 List *read_uint16_list(char *file_name)
 {
     FILE *fid;

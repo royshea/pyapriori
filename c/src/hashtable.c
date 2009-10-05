@@ -132,7 +132,7 @@ Hashtable* ht_create(uint16_t size_hint,
     ht->data_copy = data_copy;
     ht->data_free = data_free;
 
-    /* Initialze buckets that will hold data. Each element in a bucket
+    /* Initialize buckets that will hold data. Each element in a bucket
      * is an Entry storing the key and data. */
     ht->buckets = malloc(sizeof(List*) * ht->size);
     assert(ht->buckets != NULL);
@@ -171,7 +171,7 @@ void* ht_search(Hashtable *ht, void *key)
     Entry tmp_entry;
     Entry *match_entry;
 
-    /* Create a dumy entry with correct key to match against. */
+    /* Create a dummy entry with correct key to match against. */
     tmp_entry.key = key;
     tmp_entry.entry_data = NULL;
     tmp_entry.parent_table = ht;
@@ -200,7 +200,7 @@ void* ht_remove(Hashtable *ht, void *key)
     Entry *match_entry;
     void *data;
 
-    /* Create a dumy entry with correct key to match against. */
+    /* Create a dummy entry with correct key to match against. */
     tmp_entry.key = key;
     tmp_entry.entry_data = NULL;
     tmp_entry.parent_table = ht;

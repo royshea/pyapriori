@@ -54,7 +54,7 @@ typedef struct
 
 typedef struct _tree_node
 {
-    /* Link back to the hash tree contaning this node.  This provides
+    /* Link back to the hash tree containing this node.  This provides
      * access to the function pointers stored by the hash tree. */
     struct _tree_tree *parent_tree;
 

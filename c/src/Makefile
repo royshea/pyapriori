@@ -37,7 +37,7 @@ endif
 # Target specific default rules.  Explicit clean is added to keep builds
 # of different architectures clean.
 ####
-all: clean $(LIB) use_apriori
+all: clean $(LIB)
 
 msp430: clean $(LIB)
 

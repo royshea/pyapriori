@@ -34,7 +34,7 @@
 /* NOTE: This data structure is not a hash tree in the sense of a tiger
  * tree, where a node is the hash of its children.  This data structure
  * is a tree where interior nodes represent parts of a key made up of
- * inidvidual elements.  Each level of the tree reflects hashing on the
+ * individual elements.  Each level of the tree reflects hashing on the
  * next such element to select the child node.
  */
 

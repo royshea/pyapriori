@@ -237,7 +237,7 @@ void test_ll_sort(void **state)
     ll_sort(list);
     test_sorted_then_free(list);
 
-    /* Revese order list */
+    /* Reverse order list */
     list = uint16_list_create(5, 4, 3, 2, 1, 0);
     ll_sort(list);
     test_sorted_then_free(list);

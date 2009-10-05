@@ -1,3 +1,39 @@
 Implementation of the Apriori Algorithm
 =======================================
+Roy Shea <royshea@gmail.com>
 
+
+The Aprioroi algorithm is an older data mining technique for learning
+association rules.  This work provides a C and python implementation of
+the algorithm.  More information on the algorithm can be found in:
+
+[bibliography]
+- Rakesh Agrawal and Ramakrishnan Srikant.  "Fast Algorithms for Mining
+  Association Rules". SIGKDD 1994.
+
+
+Status
+------
+
+As of October 2009, the C implementation is more thoroughly tested and
+optimized.  The core is built as a library linked into programs that
+want to use the apriori algorithm.  I simple wrapper called use_apriori
+is provided to demonstrate using apriori.
+
+----
+cd $PYAPRIORI/c/src
+make
+make use_apriori
+./use_apriori -w14 -s0.001 $PYAPRIORI/evaluation/recoded_3000.txt
+----
+
+Testing is of the C implementation uses the
+http://code.google.com/p/cmockery/[cmockery framework].  Building the
+apriori library for testing and running the tests is accomplished using:
+
+----
+cd $PYAPRIORI/c/src
+make DEFS="-DUNIT_TESTING"
+cd $PYAPRIORI/c/test
+make
+----
