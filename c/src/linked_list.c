@@ -284,7 +284,7 @@ void* ll_search(List *list, void* data)
 }
 
 
-void* ll_get_nth(List *list, uint8_t index)
+void* ll_get_nth(List *list, uint16_t index)
 {
     Node *current;
 

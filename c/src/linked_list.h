@@ -41,7 +41,7 @@ void* ll_search(List *list, void* data);
 void* ll_search(List *list, void* data);
 
 /* Return reference to the nth element in the list (starting with zero). */
-void* ll_get_nth(List *list, uint8_t index);
+void* ll_get_nth(List *list, uint16_t index);
 
 /* Search for data in a list and, if found, remove from the list and
  * return its reference. */

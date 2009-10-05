@@ -16,7 +16,7 @@ List *generate_candidate_sets(List *prior_sets);
 
 /* Generate frequent sets of size 1. */
 List *generate_frequent_size_one(List *stream, List *transactions,
-        float support_ratio);
+        uint16_t min_support_count);
 
 
 /* Convert a list of data into a distinct "transaction" lists.  Each

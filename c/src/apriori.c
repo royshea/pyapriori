@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <sys/time.h>
 
 #include "linked_list.h"
 #include "hashtree.h"
@@ -186,16 +187,14 @@ List *generate_candidate_sets(List *prior_sets)
  *
  * TODO: Ample opportunity for optimization. */
 List *generate_frequent_size_one(List *stream, List *transactions,
-        float support_ratio)
+        uint16_t min_support_count)
 {
-    uint16_t min_support;
     List *unique_elements;
     List *size_one;
     uint16_t stream_index;
     uint16_t *unique_val;
 
-    min_support = support_ratio * ll_length(transactions);
-    assert(min_support > 0);
+    assert(min_support_count > 0);
 
     unique_elements = ll_create(uint16_compare, uint16_copy, uint16_free);
     size_one = ll_create(uint16_list_compare, uint16_list_copy,
@@ -216,9 +215,11 @@ List *generate_frequent_size_one(List *stream, List *transactions,
         }
     }
 
-    /* Count the number of times each unique element occures within
-     * a transaction.  If this is greater than or equal to the min_support,
-     * then add the unique element to the size_one list. */
+    /* Count the number of times each unique element occures within a
+     * transaction.  If this is greater than or equal to the
+     * min_support_count, then add the unique element to the size_one
+     * list. */
+
     for (unique_val = ll_pop(unique_elements); unique_val != NULL;
             unique_val = ll_pop(unique_elements))
     {
@@ -239,7 +240,7 @@ List *generate_frequent_size_one(List *stream, List *transactions,
         }
 
         /* Store unique_val in size_one if it has enough support. */
-        if (support_count >= min_support)
+        if (support_count >= min_support_count)
         {
             List *singleton;
             singleton = ll_create(uint16_compare, uint16_copy, uint16_free);
@@ -363,7 +364,8 @@ List *apriori(char *file_name, uint8_t transaction_width,
 
     /* Generate the size one frequent sets and store a copy in frequent. */
     size_n_frequent = generate_frequent_size_one(trace, transactions,
-            support_ratio);
+            min_support_count);
+
     frequent = ll_copy(size_n_frequent);
     ll_free(trace);
 
@@ -392,6 +394,7 @@ List *apriori(char *file_name, uint8_t transaction_width,
             transaction = ll_get_nth(transactions, i);
             tree_mark_subsets(candidate_tree, transaction);
         }
+
         size_n_frequent = tree_extract_frequent(candidate_tree,
                 min_support_count);
         tree_free(candidate_tree);

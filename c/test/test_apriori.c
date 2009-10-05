@@ -140,6 +140,7 @@ void test_generate_frequent_size_one(void **state)
     List *transactions;
     List *size_one;
     List *singleton;
+    const uint8_t WIDTH = 3;
 
     /* Create a stream of transactions with the following properties:
      * 0 -> 1x
@@ -171,48 +172,54 @@ void test_generate_frequent_size_one(void **state)
             9, 9, 9);
 
     /* Create size 3 transaction. */
-    transactions = make_transactions_fixed_width(stream, 3);
+    transactions = make_transactions_fixed_width(stream, WIDTH);
     assert_int_equal(ll_length(transactions), 49);
 
     expect_assert_failure(generate_frequent_size_one(stream,
                 transactions, 0));
 
-    size_one = generate_frequent_size_one(stream, transactions, .025 * 3);
+    size_one = generate_frequent_size_one(stream, transactions,
+            1 * WIDTH);
     assert_int_equal(ll_length(size_one), 6);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 0);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .045 * 3);
+    size_one = generate_frequent_size_one(stream, transactions,
+            2 * WIDTH);
     assert_int_equal(ll_length(size_one), 5);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 1);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .065 * 3);
+    size_one = generate_frequent_size_one(stream, transactions,
+            3 * WIDTH);
     assert_int_equal(ll_length(size_one), 4);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 2);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .085 * 3);
+    size_one = generate_frequent_size_one(stream, transactions,
+            4 * WIDTH);
     assert_int_equal(ll_length(size_one), 3);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 3);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .105 * 3);
+    size_one = generate_frequent_size_one(stream, transactions,
+            5 * WIDTH);
     assert_int_equal(ll_length(size_one), 2);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);
     assert_int_equal(*(uint16_t *)ll_get_nth(singleton, 0), 4);
     ll_free(size_one);
 
-    size_one = generate_frequent_size_one(stream, transactions, .125 * 3);
+    size_one = generate_frequent_size_one(stream, transactions,
+            6 * WIDTH);
     assert_int_equal(ll_length(size_one), 1);
     ll_sort(size_one);
     singleton = (List *)ll_get_nth(size_one, 0);

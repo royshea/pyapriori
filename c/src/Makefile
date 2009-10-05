@@ -6,7 +6,7 @@
 ####
 SOURCES = linked_list.c hashtable.c hashtree.c apriori.c uint16_list.c
 OBJECTS = $(SOURCES:.c=.o)
-CFLAGS = -O0 -g -Wall -pedantic
+CFLAGS += -g -Wall -pedantic
 
 
 ####
