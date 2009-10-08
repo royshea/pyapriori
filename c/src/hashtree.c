@@ -34,6 +34,8 @@
 /* See TODOs is code regarding functions in this header. */
 #include "uint16_list.h"
 
+#include "debug.h"
+
 /* NOTE: See other NOTEs within this program on advice about removing
  * these includes. */
 #include "hashtable_private.h"
@@ -576,4 +578,46 @@ void tree_print_uint16(Hashtree *tree)
     printf("ROOT\n");
     node_print_uint16(tree->root_node);
     printf("\n\n");
+}
+
+
+void tree_print_stats_helper(TreeNode *node, uint16_t *body_count,
+        uint16_t *leaf_count)
+{
+    uint16_t i;
+    uint16_t j;
+
+    if (node->type == LEAF)
+        *leaf_count += 1;
+    else
+    {
+        *body_count += 1;
+        for (i=0; i<node->body_table->size; i++)
+        {
+            List *bucket;
+            bucket = node->body_table->buckets[i];
+
+            for (j = 0; j < ll_length(bucket); j++)
+            {
+                Entry *e;
+                e = (Entry *)ll_get_nth(bucket, j);
+                tree_print_stats_helper(e->entry_data, body_count,
+                        leaf_count);
+            }
+        }
+    }
+}
+
+void tree_print_stats(Hashtree *tree)
+{
+    uint16_t body_count;
+    uint16_t leaf_count;
+
+    body_count = 0;
+    leaf_count = 0;
+    tree_print_stats_helper(tree->root_node, &body_count, &leaf_count);
+    pmesg(15, "num_body %d\n", body_count);
+    pmesg(15, "num_leaf %d\n", leaf_count);
+
+    return;
 }

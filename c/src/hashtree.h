@@ -64,4 +64,6 @@ List *tree_fingerprint(Hashtree *tree);
 
 void tree_print_uint16(Hashtree *tree);
 
+void tree_print_stats(Hashtree *tree);
+
 #endif /* HASHTREE_ */
