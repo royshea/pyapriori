@@ -4,7 +4,8 @@
 ####
 # Project specific configuration
 ####
-SOURCES = linked_list.c hashtable.c hashtree.c apriori.c uint16_list.c
+SOURCES = linked_list.c hashtable.c hashtree.c apriori.c uint16_list.c \
+          debug.c
 OBJECTS = $(SOURCES:.c=.o)
 LIBS = -L. -lapriori
 CFLAGS += -g -Wall -pedantic
