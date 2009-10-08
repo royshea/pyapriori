@@ -55,7 +55,7 @@ struct _ll_list
     uint16_t length;
 
     /* Functions for manipulating list entries. */
-    int16_t (*data_compare)(void *,void *);
+    int32_t (*data_compare)(void *,void *);
     void* (*data_copy) (void*);
     void (*data_free) (void*);
 };

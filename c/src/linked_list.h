@@ -34,7 +34,7 @@
 typedef struct _ll_list List;
 
 /* Create a new list. */
-List* ll_create(int16_t(*data_compare)(void *,void *),
+List* ll_create(int32_t(*data_compare)(void *,void *),
         void*(*data_copy) (void*), void(*data_data) (void*));
 
 /* Add element data to the head of the linked list. */
@@ -59,7 +59,7 @@ void ll_free(List *list);
 void ll_sort(List *list);
 
 /* Compare two linked lists. */
-int16_t ll_list_compare(void *list_blob_a, void *list_blob_b);
+int32_t ll_list_compare(void *list_blob_a, void *list_blob_b);
 
 /* Search for data in a list and, if found, return its reference. */
 void* ll_search(List *list, void* data);

@@ -43,10 +43,10 @@ typedef struct _tree_tree Hashtree;
 Hashtree* tree_create(uint16_t threshold,
         uint16_t(*hash_key)(void *),
         uint16_t(*hash_key_list)(void *),
-        int16_t(*key_compare)(void *,void *),
+        int32_t(*key_compare)(void *,void *),
         void*(*key_copy)(void *),
         void(*key_free)(void *),
-        int16_t(*data_compare)(void *,void *),
+        int32_t(*data_compare)(void *,void *),
         void*(*data_copy)(void *),
         void(*data_free)(void *));
 

@@ -51,10 +51,10 @@ struct _ht_table
 
     /* Type specific functions used by table. */
     uint16_t (*hash_function) (void *);
-    int16_t(*key_compare)(void *,void *);
+    int32_t(*key_compare)(void *,void *);
     void*(*key_copy)(void *);
     void(*key_free)(void *);
-    int16_t(*data_compare)(void *,void *);
+    int32_t(*data_compare)(void *,void *);
     void*(*data_copy)(void *);
     void(*data_free)(void *);
 

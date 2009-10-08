@@ -38,7 +38,7 @@
 
 
 /* Core functions used for manipulating uint16_t data. */
-int16_t uint16_compare(void *int_a, void *int_b)
+int32_t uint16_compare(void *int_a, void *int_b)
 {
     return *(uint16_t *)int_a - *(uint16_t *)int_b;
 }
@@ -66,7 +66,7 @@ uint16_t uint16_hash(void *key)
 }
 
 
-int16_t uint16_list_compare(void *data_a, void* data_b)
+int32_t uint16_list_compare(void *data_a, void* data_b)
 {
     return ll_list_compare(data_a, data_b);
 }

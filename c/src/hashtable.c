@@ -39,11 +39,11 @@
  * is specific to hash tables where elements are looked up based on the
  * key and the actual stored data is ignored.
  */
-static int16_t compare_entry(void* entry_a, void* entry_b)
+static int32_t compare_entry(void* entry_a, void* entry_b)
 {
     Entry *a;
     Entry *b;
-    int16_t(*key_compare)(void *,void *);
+    int32_t(*key_compare)(void *,void *);
 
     /* Type and unpack important data. */
     a = (Entry *)entry_a;
@@ -99,10 +99,10 @@ static void free_entry(void* entry)
 
 Hashtable* ht_create(uint16_t size_hint,
         uint16_t(*hash_function)(void *),
-        int16_t(*key_compare)(void *,void *),
+        int32_t(*key_compare)(void *,void *),
         void*(*key_copy)(void*),
         void(*key_free)(void*),
-        int16_t(*data_compare)(void *,void *),
+        int32_t(*data_compare)(void *,void *),
         void*(*data_copy)(void*),
         void(*data_free)(void*))
 

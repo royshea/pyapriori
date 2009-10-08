@@ -37,7 +37,7 @@
 
 
 
-List* ll_create(int16_t(*data_compare)(void *,void *),
+List* ll_create(int32_t(*data_compare)(void *,void *),
         void*(*data_copy) (void*), void(*data_free) (void*))
 {
     List *list;
@@ -260,7 +260,7 @@ void ll_sort(List *list)
 /* Traverse two lists comparing pairwise elements.  The first list with
  * a smaller key element or, should all elements be equal, the shorter
  * list is considered "less than" in the list ordering. */
-int16_t ll_list_compare(void *list_blob_a, void *list_blob_b)
+int32_t ll_list_compare(void *list_blob_a, void *list_blob_b)
 {
     List *list_a;
     List *list_b;
@@ -276,7 +276,7 @@ int16_t ll_list_compare(void *list_blob_a, void *list_blob_b)
     node_b = list_b->head;
     while (node_a != NULL && node_b != NULL)
     {
-        int16_t cmp;
+        int32_t cmp;
 
         cmp = list_a->data_compare(node_a->node_data, node_b->node_data);
         if (cmp != 0) return cmp;
