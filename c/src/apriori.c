@@ -36,6 +36,9 @@
 #include "uint16_list.h"
 #include "apriori.h"
 
+#include "debug.h"
+int msglevel = 20;
+
 #if UNIT_TESTING
 #include "../test/unit_testing.h"
 #endif /* UNIT_TESTING */
@@ -379,6 +382,7 @@ List *apriori(char *file_name, uint8_t transaction_width,
     List *size_n_frequent;
     List *frequent;
     uint16_t min_support_count;
+    uint16_t debug_size;
 
     /* Read in the data. */
     trace = read_uint16_list(file_name);
@@ -398,6 +402,7 @@ List *apriori(char *file_name, uint8_t transaction_width,
     /* Iteratively generate the size n+1 frequent sets.  Store all
      * frequent sets in frequent.  Iterate until no larger sets are
      * generated. */
+    debug_size = 1;
     while (ll_length(size_n_frequent) != 0)
     {
         List *candidates;
@@ -406,13 +411,18 @@ List *apriori(char *file_name, uint8_t transaction_width,
         List *transaction;
         uint16_t i;
 
+        debug_size += 1;
+        pmesg(15, "set_size %d\n", debug_size);
+
         /* Size n+1 candidate sets. */
         candidates = generate_candidate_sets(size_n_frequent);
         ll_free(size_n_frequent);
+        pmesg(15, "num_candidates %d\n", ll_length(candidates));
 
         /* Put into a hash tree. */
         candidate_tree = build_hashtree(candidates);
         ll_free(candidates);
+        tree_print_stats(candidate_tree);
 
         /* Count frequencies and extract frequent candidate sets. */
         for (i = 0; i < ll_length(transactions); i++)
@@ -424,6 +434,7 @@ List *apriori(char *file_name, uint8_t transaction_width,
         size_n_frequent = tree_extract_frequent(candidate_tree,
                 min_support_count);
         tree_free(candidate_tree);
+        pmesg(15, "num_frequent %d\n", ll_length(size_n_frequent));
 
         /* Copy frequent candidate sets into frequent. */
         tmp_copy = ll_copy(size_n_frequent);
