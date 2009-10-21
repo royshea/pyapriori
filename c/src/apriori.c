@@ -283,6 +283,7 @@ List *generate_frequent_size_one(List *stream, List *transactions,
     assert(ll_length(unique_elements) == 0);
     ll_free(unique_elements);
 
+    ll_sort(size_one);
     return size_one;
 }
 
