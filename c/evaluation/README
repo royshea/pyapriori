@@ -1,0 +1,154 @@
+Heap Profiling
+--------------
+
+Profiling heap usage using the massif utility included in valgrind
+
+----
+valgrind --tool=massif $PYAPRIORI/c/src/use_apriori -w14 -s0.001 $PYAPRIORI/c/evaluation/recoded_3000.txt
+ms_print massif.out.15690  > apriori_heap_profile.txt
+----
+
+Using the default heap block settings provided by massif that assumes 8
+bytes of accounting information for each allocated block and 8 byte
+alignment (or 16? see valgrind man page), we see that over 60% of the
+memory is being wasted (admin blocks and alignment) during peak usage.
+This is probably the result of many small allocations used to store each
+16-bit value.  A full scale implementation of this system should look
+into using dynamically sized arrays rather than linked lists to store
+keys.  This would also save a lot of memory since we would not use the
+list node structure that includes a next pointer.
+
+This profiling reveals that the majority of heap memory being used by
+the program is caused by the calls to +generate_candidate_sets+ and
++ll_copy+ (of the +size_n_frequent+ sets which is appended to the final
++frequent+ list) within the +apriori+ function.  Not clear that much can
+be done about this since the value is tied directly to the frequent key
+sets.  This motivates looking at list and hash tree level statistics
+directly.
+
+
+List and Hashtree Profiling
+---------------------------
+
+Looking to gather statistics about how the data structures used to
+within Apriori grow during the course of an evaluation of the frequent
+sets.  We look at the following characteristics:
+
+- set_size 
+- num_candidates 
+- num_body 
+- num_leaf 
+- num_frequent
+
+Numbers for a single configuration of hash trees run through apriori
+with different minimum supports is stored in +runtime_stats.dat+.  The
+complete call trace hash tree is described in the first data index
+(minsup of 0.0005 with 3000 identifiers corresponds to requiring at
+least one instance for the data point to carry over into frequent).
+From this we see that hash tree size peaks for key lengths of size 5
+over the set window of size 14.
+
+These numbers are dependent upon the input data set, the width of the
+window used to partition the input data, the leaf node threshold used in
+the hashtree, the number of buckets used in the hashtree.
+
+How sensitive are the results to the choice of window size?  The length
+of the input data stream?  That remains unanswered.
+
+NOTE: The following paragraph is no longer valid.  The data set is from
+the ESL TinyOS trace that included the most subsystems.
+
+Let's try this using an alternate data set.  I'm sad to say that I don't
+currently recall where the recoded_6392.txt and recoded_3000.txt data
+sets came from.  Pretty sure these are traces generated from the old SOS
+evaluation, but that means that I don't have an easy mapping to
+subsystems.  Time to transition to TinyOS.  Using the big trace gathered
+for the ESL paper.
+
+NOTE: The prior paragraph is no longer valid.  The data set is from the
+ESL TinyOS trace that included the most subsystems.
+
+Create dictionaries for the traces:
+
+----
+cat bigEslTinyOSTraceNode0.txt bigEslTinyOSTraceNode2.txt \
+    | tr ' ' '\n' | sort | uniq > eslTinyOSCalls.txt
+
+# Note that we have one hash conflict :(
+python generateCallDict.py > callDict.txt
+python recodeTrace.py bigEslTinyOSTraceNode0.txt > eslTrace0.txt
+python recodeTrace.py bigEslTinyOSTraceNode2.txt > eslTrace1.txt
+
+head -n 3000 eslTrace0.txt > eslTrace0_3000.txt
+head -n 3000 eslTrace2.txt > eslTrace2_3000.txt
+$PYAPRIORI/c/src/use_apriori -w14 -s0.0005 eslTrace0_3000.txt 1> eslSets0.txt
+python decodeTrace.py eslSets0.txt > eslSetsDecoded0.txt
+
+# Rerun with a more aggressive minsup
+$PYAPRIORI/c/src/use_apriori -w14 -s0.01 eslTrace0_3000.txt 1> eslSets0.txt
+python decodeTrace.py eslSets0.txt > eslSetsDecoded0.txt
+----
+
+Woha!  All is revealed.  That data set I was working with is THIS data
+set.  Heh heh.  The stats for list / hash tree sizes are the same.  
+
+Inspection of the functions included in the frequent sets make a lot of
+sense.  For example we see:
+
+ActiveMessageAddressC__ActiveMessageAddress__amAddress
+ActiveMessageAddressC__amAddress 
+CC2420ControlP__CC2420Config__getPanAddr
+FcfsResourceQueueC__0__FcfsQueue__isEmpty
+RETURN 
+RadioCountToLedsC__AMSend__send
+RadioCountToLedsC__MilliTimer__fired 
+RadioCountToLedsC__Packet__getPayload
+RandomMlcgC__Random__rand16
+RandomMlcgC__Random__rand32
+
+CtpRoutingEngineP__0__CtpInfo__recomputeRoutes
+CtpRoutingEngineP__0__RootControl__isRoot
+LinkEstimatorP__LinkEstimator__txAck 
+LinkEstimatorP__findIdx
+LruCtpMsgCacheP__0__Cache__lookup 
+LruCtpMsgCacheP__0__lookup 
+RETURN 
+RandomMlcgC__Random__rand16
+RandomMlcgC__Random__rand32
+
+Okay.  It looks like apriori is making sense and requires a nontrival
+sized hash tree when working with large window sizes.  Smaller windows
+result in more reasonable tree sizes.  For example, with a window of
+size 5 the hash tree maxes out at 315 leafs (for set size 2).
+Unfortunately, these small windows fail to capture exciting sets.
+Prehaps removing returns will help...
+
+----
+$PYAPRIORI/c/src/use_apriori -w5 -s0.01 eslTrace0_3000.txt 1> eslSets0w5.txt
+RETID=`cat callDict.txt  | grep RETURN | cut -f2 -d' '`
+grep -v $RETID eslTrace0.txt | head -n 3000 > eslTraceNoRet0_3000.txt
+$PYAPRIORI/c/src/use_apriori -w5 -s0.01 eslTraceNoRet0_3000.txt 1> eslSetsNoRet0w5.txt
+----
+
+Removing the returns helps generate meaningful traces again.  For
+example, many of the size 5 subsets of the above two noted frequent sets
+are generated.  However, this is accompanied by signifcantly larger hash
+trees (probably a factor of 3) since we are actually finding non-trival
+sets.  Although not too bad.  The tree for set size 4 parses 119
+candidates into 13 boday and 69 leaf nodes, with all 119 elements being
+found to be frequent.  But this is still too much memory on a platform
+that only has about 4000 bytes available for EVERYTHING.
+
+Hash Tree Fingerprinting
+------------------------
+
+How about simply encoding the stream of incoming calls into a hash tree
+and looking at the resulting signatures that form over time.  Assuming
+that I am wiling to claim one eigth of this the memory available on a
+node, I get about 500 bytes to play with.  Let us work with 8 bit
+(rather than 16 bit used above) identifiers.
+
+Figure that a node requires 10 bytes.  This bounds us around 50 nodes.
+If we use three hash slots (yay conflicts!) then we can have four levels
+of calls using at most 30 nodes, and five levels of calls using 64
+nodes.  That is sounding reasonable.
